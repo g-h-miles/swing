@@ -3,25 +3,42 @@ import ReactDOM from 'react-dom/client'
 import {
   Outlet,
   RouterProvider,
-  createRootRoute,
+  createRootRouteWithContext,
   createRoute,
   createRouter,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 import './styles.css'
 import reportWebVitals from './reportWebVitals.ts'
 
 import App from './App.tsx'
+import WindowSelector from './components/window-selector.tsx'
+import { useEventInvalidation } from './lib/hooks/use-event-invalidation.ts'
 
-const rootRoute = createRootRoute({
-  component: () => (
+
+
+const queryClient = new QueryClient()
+
+
+
+const rootRoute = createRootRouteWithContext<{
+  queryClient: QueryClient
+}>()({
+  component: () => {
+    useEventInvalidation();
+    return (
+
     <>
       <Outlet />
-      <TanStackRouterDevtools />
+      <ReactQueryDevtools buttonPosition="bottom-right" />
+      <TanStackRouterDevtools position="bottom-left" />
     </>
-  ),
+  )},
 })
+
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -29,15 +46,24 @@ const indexRoute = createRoute({
   component: App,
 })
 
-const routeTree = rootRoute.addChildren([indexRoute])
+const selectorRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/selector',
+  component: WindowSelector,
+})
+
+const routeTree = rootRoute.addChildren([indexRoute, selectorRoute])
+
+
 
 const router = createRouter({
   routeTree,
-  context: {},
+  context: {
+    queryClient,
+  },
   defaultPreload: 'intent',
   scrollRestoration: true,
   defaultStructuralSharing: true,
-  defaultPreloadStaleTime: 0,
 })
 
 declare module '@tanstack/react-router' {
@@ -51,7 +77,9 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <RouterProvider router={router} />
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
     </StrictMode>,
   )
 }
