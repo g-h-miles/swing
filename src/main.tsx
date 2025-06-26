@@ -16,7 +16,7 @@ import reportWebVitals from './reportWebVitals.ts'
 
 import App from './App.tsx'
 import WindowSelector from './components/window-selector.tsx'
-import { useEventInvalidation } from './lib/hooks/use-event-invalidation.ts'
+
 
 
 
@@ -28,7 +28,7 @@ const rootRoute = createRootRouteWithContext<{
   queryClient: QueryClient
 }>()({
   component: () => {
-    useEventInvalidation();
+
     return (
 
     <>

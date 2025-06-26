@@ -9,3 +9,33 @@ export async function getAvailableWebcams(): Promise<MediaDeviceInfo[]> {
     throw error;
   }
 }
+
+export async function requestCameraStream() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    return stream;
+  } catch (error) {
+    console.error('Error requesting camera:', error);
+    throw error;
+  }
+}
+
+export async function requestMicrophoneStream() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    return stream;
+  } catch (error) {
+    console.error('Error requesting microphone:', error);
+    throw error;
+  }
+}
+
+export async function requestCameraAndMicrophoneStream() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    return stream;
+  } catch (error) {
+    console.error('Error requesting camera and microphone:', error);
+    throw error;
+  }
+}

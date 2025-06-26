@@ -1,44 +1,57 @@
 "use client"
 
-import { useState } from "react"
-import { useAvailableWebcams } from '@/lib/hooks/use-webcams'
+import { useState, useEffect } from "react"
+import { useAvailableWebcams } from '@/lib/hooks/use-available-webcams'
+import { useCameraPermission, useMicrophonePermission } from '@/lib/hooks/use-permission'
+import { requestCameraAndMicrophoneStream } from "@/lib/webcams"
+import { WebcamPlayer } from "./window-player"
 
 interface WindowContent {
   id: number
   title: string
-  content: string
+  content: React.ReactNode
   color: string
 }
 
-const initialWindows: WindowContent[] = [
-  {
-    id: 1,
-    title: "Dashboard",
-    content:
-      "This is the main dashboard with charts, metrics, and key performance indicators. You can monitor your application's health and user activity from here.",
-    color: "bg-blue-50 border-blue-200",
-  },
-  {
-    id: 2,
-    title: "Analytics",
-    content:
-      "Detailed analytics and reporting section. View user behavior, conversion rates, and detailed insights about your application's performance.",
-    color: "bg-green-50 border-green-200",
-  },
-  {
-    id: 3,
-    title: "Settings",
-    content:
-      "Application settings and configuration panel. Manage user preferences, system settings, and customize your application experience.",
-    color: "bg-purple-50 border-purple-200",
-  },
-]
-
 export default function WindowSelector() {
-  const [activeWindow, setActiveWindow] = useState<WindowContent>(initialWindows[0])
-  const [smallWindows, setSmallWindows] = useState<WindowContent[]>(initialWindows.slice(1))
+  const { data, isLoading, isError } = useAvailableWebcams()
+
+  const createInitialWindows = (deviceId: string | null): WindowContent[] => [
+    {
+      id: 1,
+      title: "Dashboard",
+      content: <WebcamPlayer selectedDeviceId={deviceId} />,
+      color: "bg-blue-50 border-blue-200",
+    },
+    {
+      id: 2,
+      title: "Analytics",
+      content:
+        "Detailed analytics and reporting section. View user behavior, conversion rates, and detailed insights about your application's performance.",
+      color: "bg-green-50 border-green-200",
+    },
+    {
+      id: 3,
+      title: "Settings",
+      content:
+        "Application settings and configuration panel. Manage user preferences, system settings, and customize your application experience.",
+      color: "bg-purple-50 border-purple-200",
+    },
+  ]
+
+  const [activeWindow, setActiveWindow] = useState<WindowContent>()
+  const [smallWindows, setSmallWindows] = useState<WindowContent[]>([])
+
+  // Update windows when webcam data changes
+  useEffect(() => {
+    const windows = createInitialWindows(data?.[0]?.deviceId || null)
+    setActiveWindow(windows[0])
+    setSmallWindows(windows.slice(1))
+  }, [data])
 
   const handleWindowClick = (clickedWindow: WindowContent) => {
+    if (!activeWindow) return
+
     // Find the current active window and the clicked window
     const newSmallWindows = smallWindows.map((window) => (window.id === clickedWindow.id ? activeWindow : window))
 
@@ -46,7 +59,13 @@ export default function WindowSelector() {
     setSmallWindows(newSmallWindows)
   }
 
-  const { data, isLoading, isError } = useAvailableWebcams()
+  const { data: cameraPermission } = useCameraPermission()
+  const { data: microphonePermission } = useMicrophonePermission()
+
+  const handleRequestPermission = async () => {
+    const stream = await requestCameraAndMicrophoneStream()
+    console.log(stream)
+  }
 
   const WebCamList =
   isError ? <div>Error</div> :
@@ -63,24 +82,22 @@ export default function WindowSelector() {
     </div>
   )
 
-
-
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Large Window */}
-        <div className={`${activeWindow.color} rounded-lg border-2 p-8 h-96 transition-all duration-300 ease-in-out`}>
+        <div className={`${activeWindow?.color} rounded-lg border-2 p-8 h-[500px] transition-all duration-300 ease-in-out`}>
           <div className="h-full flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-gray-800">{activeWindow.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-800">{activeWindow?.title}</h1>
               <div className="flex space-x-2">
                 <div className="w-3 h-3 bg-red-400 rounded-full"></div>
                 <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
                 <div className="w-3 h-3 bg-green-400 rounded-full"></div>
               </div>
             </div>
-            <div className="flex-1 bg-white rounded-md p-6 shadow-inner">
-              <p className="text-gray-700 leading-relaxed">{activeWindow.content}</p>
+            <div className="flex-1 bg-transparent p-2 flex items-center justify-center overflow-hidden">
+              {activeWindow?.content}
             </div>
           </div>
         </div>
@@ -102,8 +119,14 @@ export default function WindowSelector() {
                     <div className="w-2 h-2 bg-green-300 rounded-full"></div>
                   </div>
                 </div>
-                <div className="flex-1 bg-white rounded-sm p-2 shadow-inner">
-                  <p className="text-xs text-gray-600 line-clamp-3">{window.content.substring(0, 80)}...</p>
+                <div className="flex-1 bg-white rounded-sm p-2 shadow-inner flex items-center justify-center overflow-hidden">
+                  {typeof window.content === 'string' ? (
+                    <p className="text-xs text-gray-600 line-clamp-3">
+                      {window.content}
+                    </p>
+                  ) : (
+                    window.content
+                  )}
                 </div>
               </div>
             </div>
@@ -116,7 +139,18 @@ export default function WindowSelector() {
         </div>
         <div className="flex">
           Webcams:
-          <p>{WebCamList}</p>
+          {WebCamList}
+        </div>
+        <div className="flex">
+          Camera Permission:
+          <p>{cameraPermission?.state}</p>
+        </div>
+        <div className="flex">
+          Microphone Permission:
+          <p>{microphonePermission?.state}</p>
+        </div>
+        <div className="flex">
+          <button onClick={handleRequestPermission}>Request Permission</button>
         </div>
       </div>
     </div>
