@@ -16,7 +16,7 @@ import reportWebVitals from './reportWebVitals.ts'
 
 import App from './App.tsx'
 import WindowSelector from './components/window-selector.tsx'
-
+import { Plain } from './components/plain.tsx'
 
 
 
@@ -52,7 +52,14 @@ const selectorRoute = createRoute({
   component: WindowSelector,
 })
 
-const routeTree = rootRoute.addChildren([indexRoute, selectorRoute])
+const plainRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/plain',
+  component: Plain,
+})
+
+const routeTree = rootRoute.addChildren([indexRoute, selectorRoute, plainRoute])
+
 
 
 
