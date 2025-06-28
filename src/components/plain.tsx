@@ -8,11 +8,22 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Fragment, useState, useRef } from "react";
-import { GripVerticalIcon } from "lucide-react";
+import { WebcamDropdown} from "./webcam-dropdown"
+import { User, Settings, Bell, Palette, LogOut, ChevronDown } from "lucide-react";
+
+// import { WebcamPlayer } from "@/components/window-player";
 
 const tags = Array.from({ length: 50 }).map(
   (_, i, a) => `v1.2.0-beta.${a.length - i}`
 );
+
+  const dropdownItems = [
+    { icon: User, label: "Profile", action: () => console.log("Profile clicked") },
+    { icon: Settings, label: "Settings", action: () => console.log("Settings clicked") },
+    { icon: Bell, label: "Notifications", action: () => console.log("Notifications clicked") },
+    { icon: Palette, label: "Appearance", action: () => console.log("Appearance clicked") },
+    { icon: LogOut, label: "Sign Out", action: () => console.log("Sign out clicked"), variant: "danger" as const },
+  ]
 
 export const Plain = () => {
   return (
@@ -32,7 +43,7 @@ export const Plain = () => {
 export function Header() {
   return (
     <div className="w-full h-16 md:h-20 flex-shrink-0 px-4 pt-4">
-      <h1 className="text-xl md:text-2xl font-bold text-white">Header</h1>
+      <img src="/loft2.svg" alt="logo" className="w-24 h-16" />
     </div>
   );
 }
@@ -42,7 +53,7 @@ export function ResizableDemo({ className }: { className?: string }) {
   const panelTwoThree = useRef<ImperativePanelHandle | null>(null);
   const panelTwo = useRef<ImperativePanelHandle | null>(null);
   const panelThree = useRef<ImperativePanelHandle | null>(null);
-  
+
   const [isPanelOneCollapsed, setIsPanelOneCollapsed] = useState(false);
   const [isPanelTwoCollapsed, setIsPanelTwoCollapsed] = useState(false);
   const [isPanelThreeCollapsed, setIsPanelThreeCollapsed] = useState(false);
@@ -69,15 +80,29 @@ export function ResizableDemo({ className }: { className?: string }) {
           console.log("panel one expanded");
           setIsPanelOneCollapsed(false);
         }}
+        onResize={() => {
+          if ((panelOne.current?.getSize() ?? 0.0) < 10) {
+            panelOne.current?.collapse();
+          } else {
+            if ((panelOne.current?.getSize() ?? 0.0) > 90.0) {
+              panelOne.current?.resize(100);
+            }
+          }
+        }}
       >
-        <div className="flex h-full items-center justify-center p-6 ">
+        {/* <div className="flex h-full items-center justify-center p-6 ">
           <span className="font-semibold">One</span>
+        </div> */}
+        {/* <WebcamPlayer selectedDeviceId={null} /> */}
+        <div className='flex justify-end pt-2 pr-2'>
+        <WebcamDropdown />
         </div>
       </ResizablePanel>
 
       <ResizableHandle
-        className={
-          isPanelOneCollapsed ? "bg-red-500" : "bg-border"
+        className={cn("w-8",
+          isPanelOneCollapsed ? "bg-red-500" : "bg-transparent"
+        )
         }
         withHandle
         onDoubleClick={() => {
@@ -109,6 +134,7 @@ export function ResizableDemo({ className }: { className?: string }) {
           <ResizablePanel defaultSize={50} ref={panelTwo} collapsible
             onCollapse={() => setIsPanelTwoCollapsed(true)}
             onExpand={() => setIsPanelTwoCollapsed(false)}
+
           >
             <div className="flex h-full items-center justify-center p-6">
               <span className="font-semibold">Two</span>

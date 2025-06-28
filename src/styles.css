@@ -88,6 +88,13 @@ code {
   --sidebar-accent-foreground: oklch(0.21 0.034 264.665);
   --sidebar-border: oklch(0.928 0.006 264.531);
   --sidebar-ring: oklch(0.707 0.022 261.325);
+
+  --liquid-glass-bg: rgba(255, 255, 255, 0.1);
+  --liquid-glass-border: rgba(255, 255, 255, 0.2);
+  --liquid-glass-shadow: rgba(0, 0, 0, 0.1);
+  --liquid-ripple-color: rgba(255, 255, 255, 0.3);
+  --liquid-flow-duration: 0.8s;
+  --liquid-bounce-duration: 0.6s;
 }
 
 .dark {
@@ -122,6 +129,13 @@ code {
   --sidebar-accent-foreground: oklch(0.985 0.002 247.839);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+
+  --liquid-glass-bg: rgba(255, 255, 255, 0.1);
+  --liquid-glass-border: rgba(255, 255, 255, 0.2);
+  --liquid-glass-shadow: rgba(0, 0, 0, 0.1);
+  --liquid-ripple-color: rgba(255, 255, 255, 0.3);
+  --liquid-flow-duration: 0.8s;
+  --liquid-bounce-duration: 0.6s;
 }
 
 @layer base {
@@ -146,6 +160,7 @@ code {
   background-image: url('/noise-80.png'),
     linear-gradient(to left top, #000000, #070004, #0a010c, #080313, #010719);
   animation: subtleHue 15s ease-in-out infinite;
+  /* background-image: url('/image.png'); */
 }
 
 @keyframes subtleHue {
@@ -156,4 +171,9 @@ code {
   50% {
     filter: hue-rotate(10deg);
   }
+}
+
+/* Prevent zoom on double tap */
+* {
+  touch-action: manipulation;
 }
