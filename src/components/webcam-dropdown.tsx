@@ -11,7 +11,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ChevronDown, Camera, Video, VideoOff, Settings } from "lucide-react"
+import {
+  VideoCameraIcon,
+  VideoCameraSlashIcon,
+  CameraIcon,
+  GearSixIcon,
+  SpinnerGapIcon,
+  WarningCircleIcon
+} from '@phosphor-icons/react'
+import { useCameraPermission} from "@/lib/hooks/use-permission";
+import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
+import { useAvailableWebcams } from "@/lib/hooks/use-available-webcams";
+
 
 // Glass effect variables
 const glassStyles = {
@@ -48,30 +59,103 @@ const MenuItem = ({ icon, children, className = "", onClick }: MenuItemProps) =>
   </DropdownMenuItem>
 )
 
-export function WebcamDropdown() {
-  const [selectedCamera, setSelectedCamera] = useState("Built-in Camera")
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true)
+type RequestPermissionStatus = "idle" | "loading" | "error" | "success"
 
-  const cameras = [
-    { id: "builtin", name: "Built-in Camera", status: "active" },
-    { id: "external", name: "External USB Camera", status: "available" },
-    { id: "virtual", name: "Virtual Camera", status: "available" },
-  ]
+export function WebcamDropdown({onCameraSelect, onVideoStart, onVideoStop}: {onCameraSelect?: (camera: MediaDeviceInfo) => void, onVideoStart?: () => void, onVideoStop?: () => void}) {
+  const { data: cameraPermission, isLoading: isCameraLoading, isError: isCameraError } = useCameraPermission();
+  const { data: webcams, isLoading: isWebcamsLoading, isError: isWebcamsError} = useAvailableWebcams();
+  const [selectedCamera, setSelectedCamera] = useState<MediaDeviceInfo | null>()
+  const [isVideoEnabled, setIsVideoEnabled] = useState(false)
+  const [requestPermissionStatus, setRequestPermissionStatus] = useState<RequestPermissionStatus>("idle")
 
-  const handleCameraSelect = (cameraName: string) => {
-    setSelectedCamera(cameraName)
+  const handleRequestPermission = async () => {
+  setRequestPermissionStatus("loading")
+  try {
+    await requestCameraAndMicrophoneStream()
+    setRequestPermissionStatus("success")
+    // refetchWebcams()
+  } catch (error) {
+    console.log('Permission request failed:', error)
+    setRequestPermissionStatus("error")
+  }
+}
+
+  const handleCameraSelect = (camera: MediaDeviceInfo) => {
+    setSelectedCamera(camera)
+    onCameraSelect?.(camera)
   }
 
+  const handleVideoToggle = () => {
+    setIsVideoEnabled(!isVideoEnabled)
+    if (!isVideoEnabled) {
+      onVideoStart?.()
+    } else {
+      onVideoStop?.()
+    }
+  }
+
+  const getButtonIcon = () => {
+    if (isCameraLoading || isWebcamsLoading || requestPermissionStatus === "loading") {
+      return <SpinnerGapIcon className="w-4 h-4 animate-spin" />
+    }
+    if (isCameraError || isWebcamsError || requestPermissionStatus === "error") {
+      return <WarningCircleIcon className="w-4 h-4 text-red-400" />
+    }
+    if (cameraPermission?.state === "granted") {
+      return <VideoCameraIcon className="w-4 h-4" />
+    }
+
+    return <VideoCameraSlashIcon className="w-4 h-4" />
+  }
+
+  const getCameraLabel = (camera: MediaDeviceInfo) => {
+    // Handle blank camera labels
+    return camera.label || `Camera ${camera.deviceId.slice(0, 8)}...` || 'Unknown Camera'
+  }
+
+const getStatusMessage = () => {
+  if (isCameraLoading || isWebcamsLoading || requestPermissionStatus === "loading") {
+    return 'Loading camera permissions...'
+  }
+  if (isCameraError || isWebcamsError || requestPermissionStatus === "error") {
+    return 'Permission denied. Check browser camera settings.'
+  }
+  if (cameraPermission?.state === "denied") {
+    return 'Camera blocked. Check browser camera settings.'
+  }
+  return 'Click to allow camera access'
+}
+
+  // Show loading/error states even when permission is unknown
+  const isPermissionGranted = cameraPermission?.state === "granted";
+  const isStillLoading = isCameraLoading || isWebcamsLoading;
+  const hasError = isCameraError || isWebcamsError;
+
+  // Always show button if loading, error, or permission not granted
+  if (!isPermissionGranted || isStillLoading || hasError) {
+    return (
+      <Button
+        variant="ghost"
+        className={`w-10 h-10 p-0 ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
+        disabled={isStillLoading}
+        onClick={handleRequestPermission}
+        title={getStatusMessage()}
+      >
+        {getButtonIcon()}
+      </Button>
+    )
+  }
+
+  // Permission granted - show dropdown
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className={`flex items-center gap-2 px-4 py-2 h-auto w-48 ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
+          className={`w-10 h-10 p-0 ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
+          title={selectedCamera ? getCameraLabel(selectedCamera) : "Select Camera"}
         >
-          <Video className="w-4 h-4" />
-          <span className="text-sm font-medium truncate flex-1">{selectedCamera}</span>
-          <ChevronDown className="w-3 h-3 transition-transform duration-300 data-[state=open]:rotate-180" />
+          <VideoCameraIcon className="w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
 
@@ -83,35 +167,45 @@ export function WebcamDropdown() {
         alignOffset={0}
         avoidCollisions={false}
       >
-        {/* Available Cameras */}
         <div className="p-1">
-          {cameras.map((camera) => (
+          {!webcams?.length && (
+            <div className="px-2 py-1.5 text-xs text-white/50">
+              No cameras available
+            </div>
+          )}
+
+          {webcams?.map((camera) => (
             <DropdownMenuItem
-              key={camera.id}
-              onClick={() => handleCameraSelect(camera.name)}
+              key={camera.deviceId}
+              onClick={() => handleCameraSelect(camera)}
               className={`${glassStyles.menuItem} ${glassStyles.hover} focus:${glassStyles.hover.replace("hover:", "")} ${glassStyles.borderRadius} ${glassStyles.transition} ${glassStyles.primaryText} text-sm ${
-                selectedCamera === camera.name ? glassStyles.selected : ""
+                selectedCamera === camera ? glassStyles.selected : ""
               }`}
             >
-              <Camera className="w-3 h-3" />
-              <span className="flex-1 font-medium">{camera.name}</span>
-              {selectedCamera === camera.name && (
+              <CameraIcon className="w-3 h-3" />
+              <span className="flex-1 font-medium">{getCameraLabel(camera)}</span>
+              {selectedCamera === camera && (
                 <div className={`w-1.5 h-1.5 ${glassStyles.indicator} rounded-full`} />
               )}
             </DropdownMenuItem>
           ))}
 
-          <DropdownMenuSeparator className={`my-1 ${glassStyles.border}`} />
+          {webcams?.length && (
+            <>
+              <DropdownMenuSeparator className={`my-1 ${glassStyles.border}`} />
 
-          {/* Camera Controls */}
-          <MenuItem
-            icon={isVideoEnabled ? <VideoOff className="w-3 h-3" /> : <Video className="w-3 h-3" />}
-            onClick={() => setIsVideoEnabled(!isVideoEnabled)}
-          >
-            {isVideoEnabled ? "Turn Off" : "Turn On"}
-          </MenuItem>
+              <MenuItem
+                icon={isVideoEnabled ? <VideoCameraSlashIcon className="w-3 h-3" /> : <VideoCameraIcon className="w-3 h-3" />}
+                onClick={handleVideoToggle}
+              >
+                {isVideoEnabled ? "Turn Off" : "Turn On"}
+              </MenuItem>
 
-          <MenuItem icon={<Settings className="w-3 h-3" />}>Settings</MenuItem>
+              <MenuItem icon={<GearSixIcon className="w-3 h-3" />}>
+                Settings
+              </MenuItem>
+            </>
+          )}
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -3,13 +3,17 @@ import {
   ResizablePanelGroup,
   ResizableHandle,
 } from "@/components/ui/resizable";
-import { type ImperativePanelHandle } from "react-resizable-panels";
+import { type ImperativePanelHandle} from "react-resizable-panels";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { Fragment, useState, useRef } from "react";
+import { Fragment, useState, useRef, memo } from "react";
 import { WebcamDropdown} from "./webcam-dropdown"
-import { User, Settings, Bell, Palette, LogOut, ChevronDown } from "lucide-react";
+// import { useMeasure } from "@uidotdev/usehooks";
+import { Webcam } from "./webcam";
+
+
+
 
 // import { WebcamPlayer } from "@/components/window-player";
 
@@ -17,15 +21,12 @@ const tags = Array.from({ length: 50 }).map(
   (_, i, a) => `v1.2.0-beta.${a.length - i}`
 );
 
-  const dropdownItems = [
-    { icon: User, label: "Profile", action: () => console.log("Profile clicked") },
-    { icon: Settings, label: "Settings", action: () => console.log("Settings clicked") },
-    { icon: Bell, label: "Notifications", action: () => console.log("Notifications clicked") },
-    { icon: Palette, label: "Appearance", action: () => console.log("Appearance clicked") },
-    { icon: LogOut, label: "Sign Out", action: () => console.log("Sign out clicked"), variant: "danger" as const },
-  ]
+
+
 
 export const Plain = () => {
+
+
   return (
     <div className="flex w-full h-screen fancy-background">
       <div className="w-full h-full flex flex-col">
@@ -48,17 +49,57 @@ export function Header() {
   );
 }
 
+const MemoizedWebcam = memo(Webcam);
+
 export function ResizableDemo({ className }: { className?: string }) {
+  // const [ref, { width, height }] = useMeasure();
+
+
   const panelOne = useRef<ImperativePanelHandle | null>(null);
   const panelTwoThree = useRef<ImperativePanelHandle | null>(null);
   const panelTwo = useRef<ImperativePanelHandle | null>(null);
   const panelThree = useRef<ImperativePanelHandle | null>(null);
 
-  const [isPanelOneCollapsed, setIsPanelOneCollapsed] = useState(false);
-  const [isPanelTwoCollapsed, setIsPanelTwoCollapsed] = useState(false);
-  const [isPanelThreeCollapsed, setIsPanelThreeCollapsed] = useState(false);
+
+  // const [panelOneMeasureRef, panelOneMeasure] = useMeasure();
+
+
+  const [panelOneCamera, setPanelOneCamera] = useState<MediaDeviceInfo | null>(null);
+  const [panelOneVideoEnabled, setPanelOneVideoEnabled] = useState(false);
+
+
+
+
+
+
+
+
+
+  // useEffect(() => {
+  //   const panelOneElement = getPanelElement("panel-one");
+  //   if (panelOneElement) {
+  //     panelOneMeasureRef(panelOneElement);
+  //   refs.current = {
+  //     panelOne: panelOneElement,
+  //   };
+  // }
+  // }, []);
+
+  const handleCameraSelect = (camera: MediaDeviceInfo) => {
+    console.log("camera selected", camera);
+    setPanelOneCamera(camera);
+  }
+  const handleVideoStart = () => {
+    console.log("video started");
+    setPanelOneVideoEnabled(true);
+  }
+  const handleVideoStop = () => {
+    setPanelOneVideoEnabled(false);
+  }
+
 
   return (
+
     <ResizablePanelGroup
       autoSaveId={"cam-layout"}
       direction="horizontal"
@@ -67,41 +108,65 @@ export function ResizableDemo({ className }: { className?: string }) {
         className
       )}
     >
+
       <ResizablePanel
+        id="panel-one"
+        tagName="div"
         ref={panelOne}
         defaultSize={50}
         collapsible
+        className="relative"
         onCollapse={() => {
           console.log("panel one collapsed");
           console.log("panel one", panelOne.current?.isCollapsed());
-          setIsPanelOneCollapsed(true);
+
         }}
         onExpand={() => {
           console.log("panel one expanded");
-          setIsPanelOneCollapsed(false);
+
         }}
-        onResize={() => {
+        onResize={()=>{
+        // setPanelOneWidth(document.getElementById("panel-one")?.offsetWidth ?? 0);
           if ((panelOne.current?.getSize() ?? 0.0) < 10) {
-            panelOne.current?.collapse();
-          } else {
-            if ((panelOne.current?.getSize() ?? 0.0) > 90.0) {
-              panelOne.current?.resize(100);
-            }
-          }
-        }}
+        panelOne.current?.collapse();
+      } else if ((panelOne.current?.getSize() ?? 0.0) > 90.0) {
+        panelOne.current?.resize(100);
+      }
+    }}
       >
         {/* <div className="flex h-full items-center justify-center p-6 ">
           <span className="font-semibold">One</span>
         </div> */}
         {/* <WebcamPlayer selectedDeviceId={null} /> */}
-        <div className='flex justify-end pt-2 pr-2'>
-        <WebcamDropdown />
+        <div className='absolute top-2 right-2 z-10'>
+          <WebcamDropdown
+            onCameraSelect={handleCameraSelect}
+            onVideoStart={handleVideoStart}
+            onVideoStop={handleVideoStop}
+          />
         </div>
+        {panelOneVideoEnabled && (
+  <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black">
+    <MemoizedWebcam
+      mirrored={true}
+      audio={true}
+      muted={true}
+      videoConstraints={{
+        deviceId: panelOneCamera?.deviceId
+      }}
+      className="w-full h-full object-cover rounded-md shadow-lg"
+      style={{
+        maxWidth: '100%',
+        maxHeight: '100%',
+      }}
+    />
+  </div>
+)}
       </ResizablePanel>
 
       <ResizableHandle
         className={cn("w-8",
-          isPanelOneCollapsed ? "bg-red-500" : "bg-transparent"
+"bg-transparent"
         )
         }
         withHandle
@@ -132,8 +197,8 @@ export function ResizableDemo({ className }: { className?: string }) {
       <ResizablePanel defaultSize={50} ref={panelTwoThree} collapsible>
         <ResizablePanelGroup direction="vertical" autoSaveId="cam-layout-right">
           <ResizablePanel defaultSize={50} ref={panelTwo} collapsible
-            onCollapse={() => setIsPanelTwoCollapsed(true)}
-            onExpand={() => setIsPanelTwoCollapsed(false)}
+            onCollapse={() =>{} }
+            onExpand={() => {}}
 
           >
             <div className="flex h-full items-center justify-center p-6">
@@ -142,9 +207,8 @@ export function ResizableDemo({ className }: { className?: string }) {
           </ResizablePanel>
           <ResizableHandle
             className={
-              isPanelTwoCollapsed || isPanelThreeCollapsed
-                ? "bg-transparent"
-                : "bg-border"
+              "bg-transparent"
+
             }
             withHandle
             onDoubleClick={() => {
@@ -167,8 +231,8 @@ export function ResizableDemo({ className }: { className?: string }) {
             <div></div>
           </ResizableHandle>
           <ResizablePanel defaultSize={50} ref={panelThree} collapsible
-            onCollapse={() => setIsPanelThreeCollapsed(true)}
-            onExpand={() => setIsPanelThreeCollapsed(false)}
+            onCollapse={() => {}}
+            onExpand={() => {}}
           >
             <div className="flex h-full items-center justify-center p-6">
               <span className="font-semibold">Three</span>
@@ -176,7 +240,9 @@ export function ResizableDemo({ className }: { className?: string }) {
           </ResizablePanel>
         </ResizablePanelGroup>
       </ResizablePanel>
+
     </ResizablePanelGroup>
+
   );
 }
 

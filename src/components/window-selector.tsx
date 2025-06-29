@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useAvailableWebcams } from '@/lib/hooks/use-available-webcams'
 import { useCameraPermission, useMicrophonePermission } from '@/lib/hooks/use-permission'
 import { requestCameraAndMicrophoneStream } from "@/lib/webcams"
-import { WebcamPlayer } from "./window-player"
+import { Webcam } from "./webcam"
 
 interface WindowContent {
   id: number
@@ -20,7 +20,7 @@ export default function WindowSelector() {
     {
       id: 1,
       title: "Dashboard",
-      content: <WebcamPlayer selectedDeviceId={deviceId} />,
+      content: <Webcam audio={true} videoConstraints={{ deviceId: deviceId ?? undefined }} />,
       color: "bg-blue-50 border-blue-200",
     },
     {

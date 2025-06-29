@@ -19,22 +19,23 @@ export function useCameraPermission() {
     staleTime: 0,
   });
 
-    const testData = queryClient.getQueryData(['camera-permission']) as PermissionStatus;
+
 
 
   useEffect(() => {
-    if (testData) {
+    if (query.data) {
       const handlePermissionChange = () => {
         queryClient.invalidateQueries({ queryKey: ['camera-permission'] });
+        queryClient.invalidateQueries({ queryKey: ['webcams'] });
       };
 
-      testData.addEventListener('change', handlePermissionChange);
+      query.data.addEventListener('change', handlePermissionChange);
 
       return () => {
-        testData.removeEventListener('change', handlePermissionChange);
+        query.data.removeEventListener('change', handlePermissionChange);
       };
     }
-  }, [testData, queryClient]);
+  }, [query.data, queryClient]);
 
 
 
