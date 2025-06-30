@@ -1,213 +1,279 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
+import type React from "react";
+import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  VideoCameraIcon,
-  VideoCameraSlashIcon,
-  CameraIcon,
-  GearSixIcon,
-  SpinnerGapIcon,
-  WarningCircleIcon
-} from '@phosphor-icons/react'
-import { useCameraPermission} from "@/lib/hooks/use-permission";
-import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAvailableWebcams } from "@/lib/hooks/use-available-webcams";
-
+import { useCameraPermission } from "@/lib/hooks/use-permission";
+import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
+import {
+	CameraIcon,
+	GearSixIcon,
+	SpinnerGapIcon,
+	VideoCameraIcon,
+	VideoCameraSlashIcon,
+	WarningCircleIcon,
+} from "@phosphor-icons/react";
 
 // Glass effect variables
-const glassStyles = {
-  background: "bg-white/5",
-  blur: "backdrop-blur-md",
-  border: "border border-white/20",
-  borderRadius: "rounded-sm",
-  shadow: "shadow-[0_8px_32px_rgba(0,0,0,0.1)]",
-  hover: "hover:bg-white/10",
-  selected: "bg-white/15",
-  buttonHover:
-    "hover:!bg-white/10 hover:border-white/40 hover:shadow-[0_8px_32px_rgba(255,255,255,0.05)] data-[state=open]:!bg-white/10",
-  transition: "transition-all duration-300",
-  primaryText: "text-white",
-  mutedText: "text-white/70",
-  menuItem: "flex items-center gap-2 px-2 py-1.5 cursor-pointer",
-  indicator: "bg-white",
-} as const
+export const glassStyles = {
+	background: "bg-white/5",
+	blur: "backdrop-blur-md",
+	border: "border border-white/20",
+	borderRadius: "rounded-sm",
+	shadow: "shadow-[0_4px_24px_rgba(0,0,0,0.28)]",
+	hover: "hover:bg-white/10",
+	selected: "bg-white/15",
+	buttonHover:
+		"hover:!bg-white/10 hover:border-white/40 hover:shadow-[0_8px_32px_rgba(255,255,255,0.05)] data-[state=open]:!bg-white/10",
+	transition: "transition-all duration-300",
+	primaryText: "text-white",
+	mutedText: "text-white/70",
+	menuItem: "flex items-center gap-2 px-2 py-1.5 cursor-pointer",
+	indicator: "bg-white",
+} as const;
 
 interface MenuItemProps {
-  icon: React.ReactNode
-  children: React.ReactNode
-  className?: string
-  onClick?: () => void
+	icon: React.ReactNode;
+	children: React.ReactNode;
+	className?: string;
+	onClick?: () => void;
 }
 
-const MenuItem = ({ icon, children, className = "", onClick }: MenuItemProps) => (
-  <DropdownMenuItem
-    onClick={onClick}
-    className={`${glassStyles.menuItem} ${glassStyles.hover} focus:${glassStyles.hover.replace("hover:", "")} ${glassStyles.borderRadius} ${glassStyles.transition} font-medium ${glassStyles.primaryText} text-sm ${className}`}
-  >
-    {icon}
-    <span>{children}</span>
-  </DropdownMenuItem>
-)
+const MenuItem = ({
+	icon,
+	children,
+	className = "",
+	onClick,
+}: MenuItemProps) => (
+	<DropdownMenuItem
+		onClick={onClick}
+		className={`${glassStyles.menuItem} ${glassStyles.hover} focus:${glassStyles.hover.replace("hover:", "")} ${glassStyles.borderRadius} ${glassStyles.transition} font-medium ${glassStyles.primaryText} text-sm ${className}`}
+	>
+		{icon}
+		<span>{children}</span>
+	</DropdownMenuItem>
+);
 
-type RequestPermissionStatus = "idle" | "loading" | "error" | "success"
+type RequestPermissionStatus = "idle" | "loading" | "error" | "success";
 
-export function WebcamDropdown({onCameraSelect, onVideoStart, onVideoStop}: {onCameraSelect?: (camera: MediaDeviceInfo) => void, onVideoStart?: () => void, onVideoStop?: () => void}) {
-  const { data: cameraPermission, isLoading: isCameraLoading, isError: isCameraError } = useCameraPermission();
-  const { data: webcams, isLoading: isWebcamsLoading, isError: isWebcamsError} = useAvailableWebcams();
-  const [selectedCamera, setSelectedCamera] = useState<MediaDeviceInfo | null>()
-  const [isVideoEnabled, setIsVideoEnabled] = useState(false)
-  const [requestPermissionStatus, setRequestPermissionStatus] = useState<RequestPermissionStatus>("idle")
+export function WebcamDropdown({
+	onCameraSelect,
+	onVideoStart,
+	onVideoStop,
+}: {
+	onCameraSelect?: (camera: MediaDeviceInfo) => void;
+	onVideoStart?: () => void;
+	onVideoStop?: () => void;
+}) {
+	const {
+		data: cameraPermission,
+		isLoading: isCameraLoading,
+		isError: isCameraError,
+	} = useCameraPermission();
+	const {
+		data: webcams,
+		isLoading: isWebcamsLoading,
+		isError: isWebcamsError,
+	} = useAvailableWebcams();
+	const [selectedCamera, setSelectedCamera] = useState<MediaDeviceInfo | null>(
+		null,
+	);
+	const [isVideoEnabled, setIsVideoEnabled] = useState(false);
+	const [requestPermissionStatus, setRequestPermissionStatus] =
+		useState<RequestPermissionStatus>("idle");
 
-  const handleRequestPermission = async () => {
-  setRequestPermissionStatus("loading")
-  try {
-    await requestCameraAndMicrophoneStream()
-    setRequestPermissionStatus("success")
-    // refetchWebcams()
-  } catch (error) {
-    console.log('Permission request failed:', error)
-    setRequestPermissionStatus("error")
-  }
-}
+	// Auto-select first camera when webcams are loaded
+	useEffect(() => {
+		if (webcams && webcams.length > 0 && !selectedCamera) {
+			const firstCamera = webcams[0];
+			setSelectedCamera(firstCamera);
+			onCameraSelect?.(firstCamera);
+		}
+	}, [webcams, selectedCamera, onCameraSelect]);
 
-  const handleCameraSelect = (camera: MediaDeviceInfo) => {
-    setSelectedCamera(camera)
-    onCameraSelect?.(camera)
-  }
+	const handleRequestPermission = async () => {
+		setRequestPermissionStatus("loading");
+		try {
+			await requestCameraAndMicrophoneStream();
+			setRequestPermissionStatus("success");
+			// refetchWebcams()
+		} catch (error) {
+			console.log("Permission request failed:", error);
+			setRequestPermissionStatus("error");
+		}
+	};
 
-  const handleVideoToggle = () => {
-    setIsVideoEnabled(!isVideoEnabled)
-    if (!isVideoEnabled) {
-      onVideoStart?.()
-    } else {
-      onVideoStop?.()
-    }
-  }
+	const handleCameraSelect = (camera: MediaDeviceInfo) => {
+		setSelectedCamera(camera);
+		onCameraSelect?.(camera);
+	};
 
-  const getButtonIcon = () => {
-    if (isCameraLoading || isWebcamsLoading || requestPermissionStatus === "loading") {
-      return <SpinnerGapIcon className="w-4 h-4 animate-spin" />
-    }
-    if (isCameraError || isWebcamsError || requestPermissionStatus === "error") {
-      return <WarningCircleIcon className="w-4 h-4 text-red-400" />
-    }
-    if (cameraPermission?.state === "granted") {
-      return <VideoCameraIcon className="w-4 h-4" />
-    }
+	const handleVideoToggle = () => {
+		setIsVideoEnabled(!isVideoEnabled);
+		if (!isVideoEnabled) {
+			onVideoStart?.();
+		} else {
+			onVideoStop?.();
+		}
+	};
 
-    return <VideoCameraSlashIcon className="w-4 h-4" />
-  }
+	const getButtonIcon = () => {
+		if (
+			isCameraLoading ||
+			isWebcamsLoading ||
+			requestPermissionStatus === "loading"
+		) {
+			return <SpinnerGapIcon className="w-4 h-4 animate-spin" />;
+		}
+		if (
+			isCameraError ||
+			isWebcamsError ||
+			requestPermissionStatus === "error"
+		) {
+			return <WarningCircleIcon className="w-4 h-4 text-red-400" />;
+		}
+		if (cameraPermission?.state === "granted") {
+			return <VideoCameraIcon className="w-4 h-4" />;
+		}
 
-  const getCameraLabel = (camera: MediaDeviceInfo) => {
-    // Handle blank camera labels
-    return camera.label || `Camera ${camera.deviceId.slice(0, 8)}...` || 'Unknown Camera'
-  }
+		return <VideoCameraSlashIcon className="w-4 h-4" />;
+	};
 
-const getStatusMessage = () => {
-  if (isCameraLoading || isWebcamsLoading || requestPermissionStatus === "loading") {
-    return 'Loading camera permissions...'
-  }
-  if (isCameraError || isWebcamsError || requestPermissionStatus === "error") {
-    return 'Permission denied. Check browser camera settings.'
-  }
-  if (cameraPermission?.state === "denied") {
-    return 'Camera blocked. Check browser camera settings.'
-  }
-  return 'Click to allow camera access'
-}
+	const getCameraLabel = (camera: MediaDeviceInfo) => {
+		// Handle blank camera labels
+		return (
+			camera.label ||
+			`Camera ${camera.deviceId.slice(0, 8)}...` ||
+			"Unknown Camera"
+		);
+	};
 
-  // Show loading/error states even when permission is unknown
-  const isPermissionGranted = cameraPermission?.state === "granted";
-  const isStillLoading = isCameraLoading || isWebcamsLoading;
-  const hasError = isCameraError || isWebcamsError;
+	const getStatusMessage = () => {
+		if (
+			isCameraLoading ||
+			isWebcamsLoading ||
+			requestPermissionStatus === "loading"
+		) {
+			return "Loading camera permissions...";
+		}
+		if (
+			isCameraError ||
+			isWebcamsError ||
+			requestPermissionStatus === "error"
+		) {
+			return "Permission denied. Check browser camera settings.";
+		}
+		if (cameraPermission?.state === "denied") {
+			return "Camera blocked. Check browser camera settings.";
+		}
+		return "Click to allow camera access";
+	};
 
-  // Always show button if loading, error, or permission not granted
-  if (!isPermissionGranted || isStillLoading || hasError) {
-    return (
-      <Button
-        variant="ghost"
-        className={`w-10 h-10 p-0 ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
-        disabled={isStillLoading}
-        onClick={handleRequestPermission}
-        title={getStatusMessage()}
-      >
-        {getButtonIcon()}
-      </Button>
-    )
-  }
+	// Show loading/error states even when permission is unknown
+	const isPermissionGranted = cameraPermission?.state === "granted";
+	const isStillLoading = isCameraLoading || isWebcamsLoading;
+	const hasError = isCameraError || isWebcamsError;
 
-  // Permission granted - show dropdown
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className={`w-10 h-10 p-0 ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
-          title={selectedCamera ? getCameraLabel(selectedCamera) : "Select Camera"}
-        >
-          <VideoCameraIcon className="w-4 h-4" />
-        </Button>
-      </DropdownMenuTrigger>
+	// Always show button if loading, error, or permission not granted
+	if (!isPermissionGranted || isStillLoading || hasError) {
+		return (
+			<Button
+				variant="ghost"
+				className={`w-10 h-10 p-0 cursor-pointer ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
+				disabled={isStillLoading}
+				onClick={handleRequestPermission}
+				title={getStatusMessage()}
+			>
+				{getButtonIcon()}
+			</Button>
+		);
+	}
 
-      <DropdownMenuContent
-        className={`w-56 ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} p-0 mt-2`}
-        align="end"
-        side="bottom"
-        sideOffset={4}
-        alignOffset={0}
-        avoidCollisions={false}
-      >
-        <div className="p-1">
-          {!webcams?.length && (
-            <div className="px-2 py-1.5 text-xs text-white/50">
-              No cameras available
-            </div>
-          )}
+	// Permission granted - show dropdown
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<Button
+					variant="ghost"
+					className={`w-10 h-10 p-0 cursor-pointer ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
+					title={
+						selectedCamera ? getCameraLabel(selectedCamera) : "Select Camera"
+					}
+				>
+					<VideoCameraIcon className="w-4 h-4" />
+				</Button>
+			</DropdownMenuTrigger>
 
-          {webcams?.map((camera) => (
-            <DropdownMenuItem
-              key={camera.deviceId}
-              onClick={() => handleCameraSelect(camera)}
-              className={`${glassStyles.menuItem} ${glassStyles.hover} focus:${glassStyles.hover.replace("hover:", "")} ${glassStyles.borderRadius} ${glassStyles.transition} ${glassStyles.primaryText} text-sm ${
-                selectedCamera === camera ? glassStyles.selected : ""
-              }`}
-            >
-              <CameraIcon className="w-3 h-3" />
-              <span className="flex-1 font-medium">{getCameraLabel(camera)}</span>
-              {selectedCamera === camera && (
-                <div className={`w-1.5 h-1.5 ${glassStyles.indicator} rounded-full`} />
-              )}
-            </DropdownMenuItem>
-          ))}
+			<DropdownMenuContent
+				className={`w-56 ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} p-0 mt-2`}
+				align="end"
+				side="bottom"
+				sideOffset={4}
+				alignOffset={0}
+				avoidCollisions={false}
+			>
+				<div className="p-1">
+					{!webcams?.length && (
+						<div className="px-2 py-1.5 text-xs text-white/50">
+							No cameras available
+						</div>
+					)}
 
-          {webcams?.length && (
-            <>
-              <DropdownMenuSeparator className={`my-1 ${glassStyles.border}`} />
+					{webcams?.map((camera) => (
+						<DropdownMenuItem
+							key={camera.deviceId}
+							onClick={() => handleCameraSelect(camera)}
+							className={`${glassStyles.menuItem} ${glassStyles.hover} focus:${glassStyles.hover.replace("hover:", "")} ${glassStyles.borderRadius} ${glassStyles.transition} ${glassStyles.primaryText} text-sm ${
+								selectedCamera?.deviceId === camera.deviceId
+									? glassStyles.selected
+									: ""
+							}`}
+						>
+							<CameraIcon className="w-3 h-3" />
+							<span className="flex-1 font-medium">
+								{getCameraLabel(camera)}
+							</span>
+							{selectedCamera?.deviceId === camera.deviceId && (
+								<div
+									className={`w-1.5 h-1.5 ${glassStyles.indicator} rounded-full`}
+								/>
+							)}
+						</DropdownMenuItem>
+					))}
 
-              <MenuItem
-                icon={isVideoEnabled ? <VideoCameraSlashIcon className="w-3 h-3" /> : <VideoCameraIcon className="w-3 h-3" />}
-                onClick={handleVideoToggle}
-              >
-                {isVideoEnabled ? "Turn Off" : "Turn On"}
-              </MenuItem>
+					{webcams?.length && (
+						<>
+							<DropdownMenuSeparator className={`my-1 ${glassStyles.border}`} />
 
-              <MenuItem icon={<GearSixIcon className="w-3 h-3" />}>
-                Settings
-              </MenuItem>
-            </>
-          )}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
+							<MenuItem
+								icon={
+									isVideoEnabled ? (
+										<VideoCameraSlashIcon className="w-3 h-3" />
+									) : (
+										<VideoCameraIcon className="w-3 h-3" />
+									)
+								}
+								onClick={handleVideoToggle}
+							>
+								{isVideoEnabled ? "Turn Off" : "Turn On"}
+							</MenuItem>
+
+							<MenuItem icon={<GearSixIcon className="w-3 h-3" />}>
+								Settings
+							</MenuItem>
+						</>
+					)}
+				</div>
+			</DropdownMenuContent>
+		</DropdownMenu>
+	);
 }
