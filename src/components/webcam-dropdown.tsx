@@ -1,7 +1,7 @@
-"use client";
+//webcam-dropdown.tsx component
 
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,9 +11,12 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAvailableWebcams } from "@/lib/hooks/use-available-webcams";
-import { useCameraPermission } from "@/lib/hooks/use-permission";
+import { glassStyles } from "@/glass";
+import { useAvailableWebcamsQuery } from "@/lib/hooks/use-available-webcams";
+import { useCameraPermissionQuery } from "@/lib/hooks/use-permission";
+import { useSelectedWebcam, useVideoEnabled } from "@/lib/hooks/use-persisted";
 import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
+
 import {
 	CameraIcon,
 	GearSixIcon,
@@ -22,24 +25,7 @@ import {
 	VideoCameraSlashIcon,
 	WarningCircleIcon,
 } from "@phosphor-icons/react";
-
-// Glass effect variables
-export const glassStyles = {
-	background: "bg-white/5",
-	blur: "backdrop-blur-md",
-	border: "border border-white/20",
-	borderRadius: "rounded-sm",
-	shadow: "shadow-[0_4px_24px_rgba(0,0,0,0.28)]",
-	hover: "hover:bg-white/10",
-	selected: "bg-white/15",
-	buttonHover:
-		"hover:!bg-white/10 hover:border-white/40 hover:shadow-[0_8px_32px_rgba(255,255,255,0.05)] data-[state=open]:!bg-white/10",
-	transition: "transition-all duration-300",
-	primaryText: "text-white",
-	mutedText: "text-white/70",
-	menuItem: "flex items-center gap-2 px-2 py-1.5 cursor-pointer",
-	indicator: "bg-white",
-} as const;
+import { useDefault } from "@uidotdev/usehooks";
 
 interface MenuItemProps {
 	icon: React.ReactNode;
@@ -66,39 +52,38 @@ const MenuItem = ({
 type RequestPermissionStatus = "idle" | "loading" | "error" | "success";
 
 export function WebcamDropdown({
+	panelId,
 	onCameraSelect,
 	onVideoStart,
 	onVideoStop,
 }: {
-	onCameraSelect?: (camera: MediaDeviceInfo) => void;
-	onVideoStart?: () => void;
-	onVideoStop?: () => void;
+	panelId: string;
+	onCameraSelect: (camera: MediaDeviceInfo) => void;
+	onVideoStart: () => void;
+	onVideoStop: () => void;
 }) {
 	const {
 		data: cameraPermission,
 		isLoading: isCameraLoading,
 		isError: isCameraError,
-	} = useCameraPermission();
+	} = useCameraPermissionQuery();
 	const {
 		data: webcams,
 		isLoading: isWebcamsLoading,
 		isError: isWebcamsError,
-	} = useAvailableWebcams();
-	const [selectedCamera, setSelectedCamera] = useState<MediaDeviceInfo | null>(
-		null,
-	);
-	const [isVideoEnabled, setIsVideoEnabled] = useState(false);
+	} = useAvailableWebcamsQuery();
+
+	const [selectedCamera] = useSelectedWebcam(panelId);
+	const [isVideoEnabled, setIsVideoEnabled] = useVideoEnabled(panelId);
 	const [requestPermissionStatus, setRequestPermissionStatus] =
 		useState<RequestPermissionStatus>("idle");
 
-	// Auto-select first camera when webcams are loaded
-	useEffect(() => {
-		if (webcams && webcams.length > 0 && !selectedCamera) {
-			const firstCamera = webcams[0];
-			setSelectedCamera(firstCamera);
-			onCameraSelect?.(firstCamera);
-		}
-	}, [webcams, selectedCamera, onCameraSelect]);
+	const handleCameraSelect = useCallback(
+		(camera: MediaDeviceInfo) => {
+			onCameraSelect(camera);
+		},
+		[onCameraSelect],
+	);
 
 	const handleRequestPermission = async () => {
 		setRequestPermissionStatus("loading");
@@ -112,17 +97,12 @@ export function WebcamDropdown({
 		}
 	};
 
-	const handleCameraSelect = (camera: MediaDeviceInfo) => {
-		setSelectedCamera(camera);
-		onCameraSelect?.(camera);
-	};
-
 	const handleVideoToggle = () => {
 		setIsVideoEnabled(!isVideoEnabled);
 		if (!isVideoEnabled) {
-			onVideoStart?.();
+			onVideoStart();
 		} else {
-			onVideoStop?.();
+			onVideoStop();
 		}
 	};
 

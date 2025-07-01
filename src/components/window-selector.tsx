@@ -1,13 +1,13 @@
 "use client";
 
-import { useAvailableWebcams } from "@/lib/hooks/use-available-webcams";
+import { useAvailableWebcamsQuery } from "@/lib/hooks/use-available-webcams";
 import {
-	useCameraPermission,
-	useMicrophonePermission,
+	useCameraPermissionQuery,
+	useMicrophonePermissionQuery,
 } from "@/lib/hooks/use-permission";
 import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
 import { useCallback, useEffect, useState } from "react";
-import { Webcam } from "./webcam";
+import { Webcam } from "./ui/webcam";
 
 interface WindowContent {
 	id: number;
@@ -17,7 +17,7 @@ interface WindowContent {
 }
 
 export default function WindowSelector() {
-	const { data, isLoading, isError } = useAvailableWebcams();
+	const { data, isLoading, isError } = useAvailableWebcamsQuery();
 
 	// Move createInitialWindows to useCallback
 	const createInitialWindows = useCallback(
@@ -73,8 +73,8 @@ export default function WindowSelector() {
 		setSmallWindows(newSmallWindows);
 	};
 
-	const { data: cameraPermission } = useCameraPermission();
-	const { data: microphonePermission } = useMicrophonePermission();
+	const { data: cameraPermission } = useCameraPermissionQuery();
+	const { data: microphonePermission } = useMicrophonePermissionQuery();
 
 	const handleRequestPermission = async () => {
 		const stream = await requestCameraAndMicrophoneStream();

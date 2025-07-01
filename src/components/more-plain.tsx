@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Webcam } from "./webcam";
+import { Webcam } from "./ui/webcam";
 
 export const MorePlain = () => {
 	const [showCamera, setShowCamera] = useState(false);

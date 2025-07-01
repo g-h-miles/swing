@@ -1,39 +1,60 @@
-import { useAvailableWebcams } from "@/lib/hooks/use-available-webcams";
+import { glassStyles } from "@/glass";
+import { useAvailableWebcamsQuery } from "@/lib/hooks/use-available-webcams";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { Webcam } from "./webcam";
+
+import { useSelectedWebcam, useVideoEnabled } from "@/lib/hooks/use-persisted";
+import { useDefault } from "@uidotdev/usehooks";
+import { useLocalStorage } from "@uidotdev/usehooks";
+import { useEffect, useState } from "react";
+import { Webcam } from "./ui/webcam";
 import { WebcamDropdown } from "./webcam-dropdown";
-import { glassStyles } from "./webcam-dropdown";
 import { WebcamStatusText } from "./webcam-status-description";
 
+export const storageKeys = {
+	camera: "camera",
+	videoEnabled: "videoEnabled",
+};
+
 export const WebcamPanelContent = ({
+	panelId,
 	className,
 }: {
+	panelId: string;
 	className?: string;
 }) => {
-	const [panelOneCamera, setPanelOneCamera] = useState<MediaDeviceInfo | null>(
-		null,
+	const [panelCamera, setPanelCamera] = useSelectedWebcam(panelId);
+	const [panelVideoEnabled, setPanelVideoEnabled] = useLocalStorage(
+		`${panelId}.${storageKeys.videoEnabled}`,
+		false,
 	);
-	const [panelOneVideoEnabled, setPanelOneVideoEnabled] = useState(false);
-	const { isLoading: isWebcamsLoading } = useAvailableWebcams();
+	const { isLoading: isWebcamsLoading, data: webcams } =
+		useAvailableWebcamsQuery();
+
+	useEffect(() => {
+		if (panelCamera && webcams) {
+			setPanelCamera(
+				webcams?.find(
+					(camera: MediaDeviceInfo) => camera.deviceId === panelCamera.deviceId,
+				) || null,
+			);
+		}
+	}, [panelCamera, webcams, setPanelCamera]);
 
 	const handleCameraSelect = (camera: MediaDeviceInfo) => {
-		console.log("camera selected", camera);
-		setPanelOneCamera(camera);
+		setPanelCamera(camera);
 	};
 	const handleVideoStart = () => {
-		console.log("video started");
-		setPanelOneVideoEnabled(true);
+		setPanelVideoEnabled(true);
 	};
 	const handleVideoStop = () => {
-		setPanelOneVideoEnabled(false);
+		setPanelVideoEnabled(false);
 	};
 
 	return (
 		<div
 			className={cn(
 				"relative h-full w-full",
-				!panelOneVideoEnabled && "border border-border rounded-md",
+				!panelVideoEnabled && "border border-border rounded-md",
 				className,
 			)}
 		>
@@ -41,9 +62,9 @@ export const WebcamPanelContent = ({
 				{!isWebcamsLoading && (
 					<WebcamStatusText
 						status={
-							!panelOneCamera?.deviceId
+							!panelCamera?.deviceId
 								? "inactive"
-								: panelOneVideoEnabled
+								: panelVideoEnabled
 									? "live"
 									: "ready"
 						}
@@ -52,19 +73,20 @@ export const WebcamPanelContent = ({
 			</div>
 			<div className="absolute top-2 right-2 z-10">
 				<WebcamDropdown
+					panelId={panelId}
 					onCameraSelect={handleCameraSelect}
 					onVideoStart={handleVideoStart}
 					onVideoStop={handleVideoStop}
 				/>
 			</div>
-			{panelOneVideoEnabled && (
+			{panelVideoEnabled && (
 				<div className="relative w-full h-full flex items-center justify-center overflow-hidden">
 					<Webcam
 						mirrored={true}
 						audio={true}
 						muted={true}
 						videoConstraints={{
-							deviceId: panelOneCamera?.deviceId,
+							deviceId: panelCamera?.deviceId,
 						}}
 						className={cn(
 							"w-full h-full object-cover",

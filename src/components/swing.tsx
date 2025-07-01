@@ -1,49 +1,20 @@
+//swing.tsx component
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@uidotdev/usehooks";
-import { Fragment, useRef } from "react";
+import { useRef } from "react";
 import type { ImperativePanelHandle } from "react-resizable-panels";
+
 // import { useMeasure } from "@uidotdev/usehooks";
 
 import { WebcamPanelContent } from "./webcam-panel";
 
-// import { WebcamPlayer } from "@/components/window-player";
-
-const tags = Array.from({ length: 50 }).map(
-	(_, i, a) => `v1.2.0-beta.${a.length - i}`,
-);
-
-export const Plain = () => {
-	return (
-		<div className="flex w-full h-screen fancy-background">
-			<div className="w-full h-full flex flex-col">
-				<Header />
-
-				<div className="flex flex-1 min-h-0 overflow-hidden px-4 pb-4 gap-3">
-					<ResizableDemo className="flex-shrink-0" />
-					<ScrollAreaDemo className="flex-1 hidden md:block" />
-				</div>
-			</div>
-		</div>
-	);
-};
-
-export function Header() {
-	return (
-		<div className="w-full h-16 md:h-20 flex-shrink-0 px-4 pt-4 pb-2">
-			<img src="/loft2.svg" alt="logo" className="h-full" />
-		</div>
-	);
-}
-
 export function ResizableDemo({ className }: { className?: string }) {
-	const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
+	// const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
+	const isSmallDevice = false;
 	// const [ref, { width, height }] = useMeasure();
 
 	const panelOne = useRef<ImperativePanelHandle | null>(null);
@@ -85,8 +56,6 @@ export function ResizableDemo({ className }: { className?: string }) {
 		return;
 	};
 
-	// const [panelOneMeasureRef, panelOneMeasure] = useMeasure();
-
 	return (
 		<ResizablePanelGroup
 			autoSaveId={"cam-layout"}
@@ -107,7 +76,7 @@ export function ResizableDemo({ className }: { className?: string }) {
 					handlePanelResize({ ref: panelOne });
 				}}
 			>
-				<WebcamPanelContent />
+				<WebcamPanelContent panelId="panel-one" />
 			</ResizablePanel>
 			<ResizableHandle
 				className={cn("w-8", "bg-transparent", isSmallDevice && "hidden")}
@@ -136,7 +105,7 @@ export function ResizableDemo({ className }: { className?: string }) {
 						// onCollapse={() => {}}
 						// onExpand={() => {}}
 					>
-						<WebcamPanelContent />
+						<WebcamPanelContent panelId="panel-two" />
 					</ResizablePanel>
 					<ResizableHandle
 						className={
@@ -150,33 +119,15 @@ export function ResizableDemo({ className }: { className?: string }) {
 					<ResizablePanel
 						defaultSize={50}
 						ref={panelThree}
+						id="panel-three"
 						collapsible
 						// onCollapse={() => {}}
 						// onExpand={() => {}}
 					>
-						<WebcamPanelContent />
+						<WebcamPanelContent panelId="panel-three" />
 					</ResizablePanel>
 				</ResizablePanelGroup>
 			</ResizablePanel>
 		</ResizablePanelGroup>
-	);
-}
-
-export function ScrollAreaDemo({ className }: { className?: string }) {
-	return (
-		<ScrollArea className={cn("rounded-xs border m-0", className)}>
-			<div className="p-1">
-				{tags.map((tag) => (
-					<Fragment key={tag}>
-						<div className="text-sm h-32 rounded-md border border-lime-400">
-							<span className="text-xs bg-muted text-muted-foreground ml-1">
-								{tag}
-							</span>
-						</div>
-						<Separator className="my-2" />
-					</Fragment>
-				))}
-			</div>
-		</ScrollArea>
 	);
 }

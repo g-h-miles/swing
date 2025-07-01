@@ -1,13 +1,7 @@
-import { Link } from '@tanstack/react-router'
-
-export default function Header() {
-  return (
-    <header className="p-2 flex gap-2 bg-white text-black justify-between">
-      <nav className="flex flex-row">
-        <div className="px-2 font-bold">
-          <Link to="/">Home</Link>
-        </div>
-      </nav>
-    </header>
-  )
+export function Header() {
+	return (
+		<div className="w-full h-16 md:h-20 flex-shrink-0 px-4 pt-4 pb-2">
+			<img src="/loft2.svg" alt="logo" className="h-full" />
+		</div>
+	);
 }

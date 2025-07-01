@@ -1,5 +1,5 @@
+import { glassStyles } from "@/glass";
 import { cn } from "@/lib/utils";
-import { glassStyles } from "./webcam-dropdown";
 export type WebcamStatus = "ready" | "live" | "replay" | "inactive";
 
 const statusMap: Record<WebcamStatus, { label: string; color: string }> = {

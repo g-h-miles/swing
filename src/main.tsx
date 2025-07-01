@@ -1,80 +1,26 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import {
-	Outlet,
-	RouterProvider,
-	createRootRouteWithContext,
-	createRoute,
-	createRouter,
-} from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { QueryClient } from "@tanstack/react-query";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
+
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 
 import "./styles.css";
+import * as TanStackQueryProvider from "./integrations/tanstack-query/root-provider.tsx";
 import reportWebVitals from "./reportWebVitals.ts";
 
 import { scan } from "react-scan";
-import App from "./App.tsx";
-import { MorePlain } from "./components/more-plain.tsx";
-import { Plain } from "./components/plain.tsx";
-import WindowSelector from "./components/window-selector.tsx";
+import { routeTree } from "./routeTree.gen";
 
 scan({
 	enabled: true,
 });
 
-const queryClient = new QueryClient();
-
-const rootRoute = createRootRouteWithContext<{
-	queryClient: QueryClient;
-}>()({
-	component: () => {
-		return (
-			<>
-				<Outlet />
-				<ReactQueryDevtools buttonPosition="bottom-right" />
-				<TanStackRouterDevtools position="bottom-left" />
-			</>
-		);
-	},
-});
-
-const indexRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/",
-	component: App,
-});
-
-const selectorRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/selector",
-	component: WindowSelector,
-});
-
-const plainRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/plain",
-	component: Plain,
-});
-
-const morePlainRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: "/more-plain",
-	component: MorePlain,
-});
-
-const routeTree = rootRoute.addChildren([
-	indexRoute,
-	selectorRoute,
-	plainRoute,
-	morePlainRoute,
-]);
+export const queryClient = new QueryClient();
 
 const router = createRouter({
 	routeTree,
 	context: {
-		queryClient,
+		...TanStackQueryProvider.getContext(),
 	},
 	defaultPreload: "intent",
 	scrollRestoration: true,
@@ -92,9 +38,9 @@ if (rootElement && !rootElement.innerHTML) {
 	const root = ReactDOM.createRoot(rootElement);
 	root.render(
 		<StrictMode>
-			<QueryClientProvider client={queryClient}>
+			<TanStackQueryProvider.Provider>
 				<RouterProvider router={router} />
-			</QueryClientProvider>
+			</TanStackQueryProvider.Provider>
 		</StrictMode>,
 	);
 }

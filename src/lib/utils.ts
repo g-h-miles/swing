@@ -1,6 +1,16 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+	return twMerge(clsx(inputs));
 }
+
+export const safeJsonParse = <T>(str: string) => {
+	try {
+		const jsonValue: T = JSON.parse(str);
+
+		return jsonValue;
+	} catch {
+		return undefined;
+	}
+};
