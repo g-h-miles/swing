@@ -5,6 +5,8 @@ import {
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@uidotdev/usehooks";
+import { useWindowSize } from "@uidotdev/usehooks";
 import { useRef } from "react";
 import type { ImperativePanelHandle } from "react-resizable-panels";
 
@@ -12,9 +14,12 @@ import type { ImperativePanelHandle } from "react-resizable-panels";
 
 import { WebcamPanelContent } from "./webcam-panel";
 
-export function ResizableDemo({ className }: { className?: string }) {
-	// const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-	const isSmallDevice = false;
+export function ResizableDemo({
+	className,
+	availableWebcams,
+}: { className?: string; availableWebcams: MediaDeviceInfo[] }) {
+	const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
+	// const isSmallDevice = false;
 	// const [ref, { width, height }] = useMeasure();
 
 	const panelOne = useRef<ImperativePanelHandle | null>(null);
@@ -76,7 +81,10 @@ export function ResizableDemo({ className }: { className?: string }) {
 					handlePanelResize({ ref: panelOne });
 				}}
 			>
-				<WebcamPanelContent panelId="panel-one" />
+				<WebcamPanelContent
+					panelId="panel-one"
+					availableWebcams={availableWebcams}
+				/>
 			</ResizablePanel>
 			<ResizableHandle
 				className={cn("w-8", "bg-transparent", isSmallDevice && "hidden")}
@@ -105,7 +113,10 @@ export function ResizableDemo({ className }: { className?: string }) {
 						// onCollapse={() => {}}
 						// onExpand={() => {}}
 					>
-						<WebcamPanelContent panelId="panel-two" />
+						<WebcamPanelContent
+							panelId="panel-two"
+							availableWebcams={availableWebcams}
+						/>
 					</ResizablePanel>
 					<ResizableHandle
 						className={
@@ -124,7 +135,10 @@ export function ResizableDemo({ className }: { className?: string }) {
 						// onCollapse={() => {}}
 						// onExpand={() => {}}
 					>
-						<WebcamPanelContent panelId="panel-three" />
+						<WebcamPanelContent
+							panelId="panel-three"
+							availableWebcams={availableWebcams}
+						/>
 					</ResizablePanel>
 				</ResizablePanelGroup>
 			</ResizablePanel>

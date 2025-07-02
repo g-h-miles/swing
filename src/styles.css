@@ -163,6 +163,11 @@ code {
   /* background-image: url('/image.png'); */
 }
 
+.fancy-fill {
+  background-image: url('/noise-80.png'),
+    linear-gradient(to left top, #000000, #070004, #0a010c, #080313, #010719);
+}
+
 @keyframes subtleHue {
   0%,
   100% {
@@ -176,4 +181,8 @@ code {
 /* Prevent zoom on double tap */
 * {
   touch-action: manipulation;
+}
+
+.root {
+  isolation: isolate;
 }

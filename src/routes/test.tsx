@@ -1,5 +1,7 @@
+import { Button } from "@/components/ui/button";
 import { loadPanelStorage } from "@/lib/webcams";
 import { queryClient } from "@/main";
+import { PlayIcon } from "@phosphor-icons/react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -25,6 +27,9 @@ function RouteComponent() {
 			))}
 			<div>Default webcam: {selectedCamera?.label}</div>
 			<div>Video enabled: {videoEnabled?.toString()}</div>
+			<Button>
+				<PlayIcon color="currentColor" className="fill-lime-500" />
+			</Button>
 		</div>
 	);
 }

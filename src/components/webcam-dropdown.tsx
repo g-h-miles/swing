@@ -17,6 +17,8 @@ import { useCameraPermissionQuery } from "@/lib/hooks/use-permission";
 import { useSelectedWebcam, useVideoEnabled } from "@/lib/hooks/use-persisted";
 import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
 
+import { useWebcamStore } from "@/lib/stores/webcam-store";
+
 import {
 	CameraIcon,
 	GearSixIcon,
@@ -53,37 +55,66 @@ type RequestPermissionStatus = "idle" | "loading" | "error" | "success";
 
 export function WebcamDropdown({
 	panelId,
-	onCameraSelect,
-	onVideoStart,
-	onVideoStop,
+	availableWebcams,
+	// onCameraSelect,
+	// onVideoStart,
+	// onVideoStop,
 }: {
 	panelId: string;
-	onCameraSelect: (camera: MediaDeviceInfo) => void;
-	onVideoStart: () => void;
-	onVideoStop: () => void;
+	availableWebcams: MediaDeviceInfo[];
+	// onCameraSelect: (camera: MediaDeviceInfo) => void;
+	// onVideoStart: () => void;
+	// onVideoStop: () => void;
 }) {
 	const {
 		data: cameraPermission,
 		isLoading: isCameraLoading,
 		isError: isCameraError,
 	} = useCameraPermissionQuery();
+
+	const selection = useWebcamStore((state) => state.selections[panelId]);
+	const setCamera = useWebcamStore((state) => state.setCamera);
+	const setVideoEnabled = useWebcamStore((state) => state.setVideoEnabled);
+
+	//Store initialization
+	if (!selection) {
+		return (
+			<Button
+				variant="ghost"
+				className="w-10 h-10 p-0 cursor-wait" // Use cursor-wait
+				disabled={true}
+				title="Initializing..."
+			>
+				<SpinnerGapIcon className="w-4 h-4 animate-spin" />
+			</Button>
+		);
+	}
+
 	const {
 		data: webcams,
 		isLoading: isWebcamsLoading,
 		isError: isWebcamsError,
 	} = useAvailableWebcamsQuery();
 
-	const [selectedCamera] = useSelectedWebcam(panelId);
-	const [isVideoEnabled, setIsVideoEnabled] = useVideoEnabled(panelId);
+	// const [selectedCamera] = useSelectedWebcam(panelId);
+	// const [isVideoEnabled, setIsVideoEnabled] = useVideoEnabled(panelId);
 	const [requestPermissionStatus, setRequestPermissionStatus] =
 		useState<RequestPermissionStatus>("idle");
 
-	const handleCameraSelect = useCallback(
-		(camera: MediaDeviceInfo) => {
-			onCameraSelect(camera);
-		},
-		[onCameraSelect],
-	);
+	// const handleCameraSelect = useCallback(
+	// 	(camera: MediaDeviceInfo) => {
+	// 		onCameraSelect(camera);
+	// 	},
+	// 	[onCameraSelect],
+	// );
+
+	const handleCameraSelect = (camera: MediaDeviceInfo) => {
+		setCamera(panelId, camera.deviceId);
+	};
+
+	const handleVideoToggle = () => {
+		setVideoEnabled(panelId, !selection.videoEnabled);
+	};
 
 	const handleRequestPermission = async () => {
 		setRequestPermissionStatus("loading");
@@ -97,14 +128,14 @@ export function WebcamDropdown({
 		}
 	};
 
-	const handleVideoToggle = () => {
-		setIsVideoEnabled(!isVideoEnabled);
-		if (!isVideoEnabled) {
-			onVideoStart();
-		} else {
-			onVideoStop();
-		}
-	};
+	// const handleVideoToggle = () => {
+	// 	setIsVideoEnabled(!isVideoEnabled);
+	// 	if (!isVideoEnabled) {
+	// 		onVideoStart();
+	// 	} else {
+	// 		onVideoStop();
+	// 	}
+	// };
 
 	const getButtonIcon = () => {
 		if (
@@ -128,7 +159,13 @@ export function WebcamDropdown({
 		return <VideoCameraSlashIcon className="w-4 h-4" />;
 	};
 
-	const getCameraLabel = (camera: MediaDeviceInfo) => {
+	const getCameraLabel = (cameraId: string) => {
+		const camera = availableWebcams.find(
+			(camera) => camera.deviceId === cameraId,
+		);
+		if (!camera) {
+			return;
+		}
 		// Handle blank camera labels
 		return (
 			camera.label ||
@@ -186,7 +223,9 @@ export function WebcamDropdown({
 					variant="ghost"
 					className={`w-10 h-10 p-0 cursor-pointer ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
 					title={
-						selectedCamera ? getCameraLabel(selectedCamera) : "Select Camera"
+						selection.deviceId
+							? getCameraLabel(selection.deviceId)
+							: "Select Camera"
 					}
 				>
 					<VideoCameraIcon className="w-4 h-4" />
@@ -213,16 +252,16 @@ export function WebcamDropdown({
 							key={camera.deviceId}
 							onClick={() => handleCameraSelect(camera)}
 							className={`${glassStyles.menuItem} ${glassStyles.hover} focus:${glassStyles.hover.replace("hover:", "")} ${glassStyles.borderRadius} ${glassStyles.transition} ${glassStyles.primaryText} text-sm ${
-								selectedCamera?.deviceId === camera.deviceId
+								selection.deviceId === camera.deviceId
 									? glassStyles.selected
 									: ""
 							}`}
 						>
 							<CameraIcon className="w-3 h-3" />
 							<span className="flex-1 font-medium">
-								{getCameraLabel(camera)}
+								{getCameraLabel(camera.deviceId)}
 							</span>
-							{selectedCamera?.deviceId === camera.deviceId && (
+							{selection.deviceId === camera.deviceId && (
 								<div
 									className={`w-1.5 h-1.5 ${glassStyles.indicator} rounded-full`}
 								/>
@@ -236,7 +275,7 @@ export function WebcamDropdown({
 
 							<MenuItem
 								icon={
-									isVideoEnabled ? (
+									selection.videoEnabled ? (
 										<VideoCameraSlashIcon className="w-3 h-3" />
 									) : (
 										<VideoCameraIcon className="w-3 h-3" />
@@ -244,7 +283,7 @@ export function WebcamDropdown({
 								}
 								onClick={handleVideoToggle}
 							>
-								{isVideoEnabled ? "Turn Off" : "Turn On"}
+								{selection.videoEnabled ? "Turn Off" : "Turn On"}
 							</MenuItem>
 
 							<MenuItem icon={<GearSixIcon className="w-3 h-3" />}>

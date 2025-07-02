@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TestRouteImport } from './routes/test'
 import { Route as SwingRouteImport } from './routes/swing'
+import { Route as PlayerRouteImport } from './routes/player'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TestRoute = TestRouteImport.update({
@@ -23,6 +24,11 @@ const SwingRoute = SwingRouteImport.update({
   path: '/swing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlayerRoute = PlayerRouteImport.update({
+  id: '/player',
+  path: '/player',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,30 +37,34 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/player': typeof PlayerRoute
   '/swing': typeof SwingRoute
   '/test': typeof TestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/player': typeof PlayerRoute
   '/swing': typeof SwingRoute
   '/test': typeof TestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/player': typeof PlayerRoute
   '/swing': typeof SwingRoute
   '/test': typeof TestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/swing' | '/test'
+  fullPaths: '/' | '/player' | '/swing' | '/test'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/swing' | '/test'
-  id: '__root__' | '/' | '/swing' | '/test'
+  to: '/' | '/player' | '/swing' | '/test'
+  id: '__root__' | '/' | '/player' | '/swing' | '/test'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PlayerRoute: typeof PlayerRoute
   SwingRoute: typeof SwingRoute
   TestRoute: typeof TestRoute
 }
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SwingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/player': {
+      id: '/player'
+      path: '/player'
+      fullPath: '/player'
+      preLoaderRoute: typeof PlayerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PlayerRoute: PlayerRoute,
   SwingRoute: SwingRoute,
   TestRoute: TestRoute,
 }
