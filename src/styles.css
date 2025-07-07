@@ -186,3 +186,13 @@ code {
 .root {
   isolation: isolate;
 }
+
+.sub-panel-handle {
+  height: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.sub-panel-group:hover .sub-panel-handle,
+.sub-panel-group:focus-within .sub-panel-handle {
+  height: auto;
+}

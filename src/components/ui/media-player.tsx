@@ -1,3 +1,5 @@
+
+
 "use client";
 
 import { Badge } from "@/components/ui/badge";
@@ -22,28 +24,28 @@ import { cn } from "@/lib/utils";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Slot } from "@radix-ui/react-slot";
 import {
-  AlertTriangleIcon,
-  CaptionsOffIcon,
-  CheckIcon,
-  DownloadIcon,
-  FastForwardIcon,
-  Loader2Icon,
-  Maximize2Icon,
-  Minimize2Icon,
-  PauseIcon,
-  PictureInPicture2Icon,
-  PictureInPictureIcon,
-  PlayIcon,
-  RefreshCcwIcon,
-  RepeatIcon,
-  RewindIcon,
-  RotateCcwIcon,
-  SettingsIcon,
-  SubtitlesIcon,
-  Volume1Icon,
-  Volume2Icon,
-  VolumeXIcon,
-} from "lucide-react";
+	WarningIcon as AlertTriangleIcon,
+	SubtitlesSlashIcon as CaptionsOffIcon,
+	CheckIcon,
+	DownloadIcon,
+	FastForwardIcon,
+	SpinnerIcon as Loader2Icon,
+	ArrowsOutSimpleIcon as Maximize2Icon,
+	ArrowsInSimpleIcon as Minimize2Icon,
+	PauseIcon,
+	PictureInPictureIcon,
+	PlayIcon,
+	ArrowsCounterClockwiseIcon as RefreshCcwIcon,
+	RepeatIcon,
+	RewindIcon,
+	ArrowCounterClockwiseIcon as RotateCcwIcon,
+	GearSixIcon as SettingsIcon,
+	SubtitlesIcon,
+	SpeakerLowIcon as Volume1Icon,
+	SpeakerHighIcon as Volume2Icon,
+	SpeakerXIcon as VolumeXIcon,
+  PictureInPictureIcon as PictureInPicture2Icon,
+} from "@phosphor-icons/react";
 import {
   MediaActionTypes,
   MediaProvider,

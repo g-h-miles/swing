@@ -21,81 +21,55 @@ export const WebcamPanelContent = ({
 	}
 	const { deviceId, videoEnabled } = selection;
 
-	// const [panelCamera, setPanelCamera] = useSelectedWebcam(panelId);
-	// const [panelVideoEnabled, setPanelVideoEnabled] = useLocalStorage(
-	// 	`${panelId}.${storageKeys.videoEnabled}`,
-	// 	false,
-	// );
-	// const { isLoading: isWebcamsLoading, data: webcams } =
-	// 	useAvailableWebcamsQuery();
-
-	// useEffect(() => {
-	// 	if (panelCamera && webcams) {
-	// 		setPanelCamera(
-	// 			webcams?.find(
-	// 				(camera: MediaDeviceInfo) => camera.deviceId === panelCamera.deviceId,
-	// 			) || null,
-	// 		);
-	// 	}
-	// }, [panelCamera, webcams, setPanelCamera]);
-
-	// const handleCameraSelect = (camera: MediaDeviceInfo) => {
-	// 	setPanelCamera(camera);
-	// };
-	// const handleVideoStart = () => {
-	// 	setPanelVideoEnabled(true);
-	// };
-	// const handleVideoStop = () => {
-	// 	setPanelVideoEnabled(false);
-	// };
-
 	return (
-		<div
-			className={cn(
-				"relative h-full w-full",
-				!videoEnabled && "border border-border rounded-md",
-				className,
-			)}
-		>
-			<div className="absolute top-2 left-2 z-10">
-				{true && (
-					<WebcamStatusText
-						status={!deviceId ? "inactive" : videoEnabled ? "live" : "ready"}
-					/>
+		<div className="p-1 size-full @container">
+			<div
+				className={cn(
+					"relative h-full w-full",
+					!videoEnabled && "border border-border rounded-md",
+					className,
 				)}
-			</div>
-			<div className="absolute top-2 right-2 z-10">
-				<WebcamDropdown
-					panelId={panelId}
-					availableWebcams={availableWebcams}
-					// onCameraSelect={handleCameraSelect}
-					// onVideoStart={handleVideoStart}
-					// onVideoStop={handleVideoStop}
-				/>
-			</div>
-			{videoEnabled && deviceId && (
-				<div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-					<Webcam
-						mirrored={true}
-						audio={true}
-						muted={true}
-						videoConstraints={{
-							deviceId: deviceId,
-						}}
-						className={cn(
-							"w-full h-full object-cover",
-							"bg-black",
-							glassStyles.blur,
-							"rounded-md",
-							glassStyles.shadow,
-						)}
-						style={{
-							maxWidth: "100%",
-							maxHeight: "100%",
-						}}
+			>
+				<div className="absolute top-2 left-2 z-10">
+					{true && (
+						<WebcamStatusText
+							status={!deviceId ? "inactive" : videoEnabled ? "live" : "ready"}
+						/>
+					)}
+				</div>
+				<div className="absolute top-2 right-2 z-10">
+					<WebcamDropdown
+						panelId={panelId}
+						availableWebcams={availableWebcams}
+						// onCameraSelect={handleCameraSelect}
+						// onVideoStart={handleVideoStart}
+						// onVideoStop={handleVideoStop}
 					/>
 				</div>
-			)}
+				{videoEnabled && deviceId && (
+					<div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+						<Webcam
+							mirrored={true}
+							audio={true}
+							muted={true}
+							videoConstraints={{
+								deviceId: deviceId,
+							}}
+							className={cn(
+								"w-full h-full object-cover",
+								"bg-black",
+								glassStyles.blur,
+								"rounded-md",
+								glassStyles.shadow,
+							)}
+							style={{
+								maxWidth: "100%",
+								maxHeight: "100%",
+							}}
+						/>
+					</div>
+				)}
+			</div>
 		</div>
 	);
 };

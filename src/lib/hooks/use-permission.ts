@@ -39,7 +39,7 @@ export function useCameraPermissionQuery() {
 	return query;
 }
 
-export function useMicrophonePermissionQuery() {
+function useMicrophonePermissionQuery() {
 	const queryClient = useQueryClient();
 
 	const query = useQuery({

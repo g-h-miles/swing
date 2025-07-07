@@ -16,7 +16,7 @@ const MediaDeviceInfoSchema = z.object({
 	kind: z.string(),
 });
 
-export const useSelectedWebcam_ = (panelId: string) => {
+const useSelectedWebcam_ = (panelId: string) => {
 	const [panelCamera, setPanelCamera] = useLocalStorage<MediaDeviceInfo | null>(
 		`${panelId}.${storageKeys.camera}`,
 		null,

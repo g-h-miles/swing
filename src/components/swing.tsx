@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/resizable";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@uidotdev/usehooks";
-import { useWindowSize } from "@uidotdev/usehooks";
 import { useRef } from "react";
 import type { ImperativePanelHandle } from "react-resizable-panels";
 
@@ -14,13 +13,14 @@ import type { ImperativePanelHandle } from "react-resizable-panels";
 
 import { WebcamPanelContent } from "./webcam-panel";
 
+const LAYOUT_KEY = "cam-layout";
+const SUB_LAYOUT_KEY = "cam-layout-right";
+
 export function ResizableDemo({
 	className,
 	availableWebcams,
 }: { className?: string; availableWebcams: MediaDeviceInfo[] }) {
 	const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
-	// const isSmallDevice = false;
-	// const [ref, { width, height }] = useMeasure();
 
 	const panelOne = useRef<ImperativePanelHandle | null>(null);
 	const panelTwoThree = useRef<ImperativePanelHandle | null>(null);
@@ -35,9 +35,10 @@ export function ResizableDemo({
 			return;
 		}
 		const size = panel.getSize();
-		if (size < 10) {
+		const isCollapsed = panel.isCollapsed();
+		if (size < 10 && !isCollapsed) {
 			panel.collapse();
-		} else if (size > 90) {
+		} else if (size > 90 && size < 100) {
 			panel.resize(100);
 		}
 		return;
@@ -63,10 +64,12 @@ export function ResizableDemo({
 
 	return (
 		<ResizablePanelGroup
-			autoSaveId={"cam-layout"}
+			autoSaveId={LAYOUT_KEY}
 			direction="horizontal"
 			className={cn(
-				"w-full  md:max-w-[min(80%,_2000px)]   rounded-xs border border-border md:min-w-[450px] h-full",
+				"w-full  md:max-w-[min(80%,_2000px)]   rounded-xs pl-1",
+				// "border border-border ",
+				"md:min-w-[450px] h-full",
 				className,
 			)}
 		>
@@ -87,9 +90,10 @@ export function ResizableDemo({
 				/>
 			</ResizablePanel>
 			<ResizableHandle
-				className={cn("w-8", "bg-transparent", isSmallDevice && "hidden")}
-				withHandle
+				className={cn("w-0", "bg-transparent", isSmallDevice && "hidden")}
 				onDoubleClick={() => handleHandleDoubleClick({ ref: panelOne })}
+				hitAreaMargins={{ coarse: 5, fine: 15 }}
+				withHandle
 			>
 				<div />
 			</ResizableHandle>
@@ -100,7 +104,11 @@ export function ResizableDemo({
 				collapsible
 				className={cn(isSmallDevice && "hidden")}
 			>
-				<ResizablePanelGroup direction="vertical" autoSaveId="cam-layout-right">
+				<ResizablePanelGroup
+					direction="vertical"
+					autoSaveId={SUB_LAYOUT_KEY}
+					className="overflow-visible"
+				>
 					{/* <WebcamPanel /> */}
 					<ResizablePanel
 						defaultSize={50}
@@ -109,31 +117,29 @@ export function ResizableDemo({
 						collapsible
 						onResize={() => {
 							handlePanelResize({ ref: panelTwo });
+							console.log("onResize");
 						}}
-						// onCollapse={() => {}}
-						// onExpand={() => {}}
 					>
 						<WebcamPanelContent
+							className=""
 							panelId="panel-two"
 							availableWebcams={availableWebcams}
 						/>
 					</ResizablePanel>
 					<ResizableHandle
-						className={
-							"bg-transparent h-8 [&[data-panel-group-direction='vertical']]:h-8"
-						}
+						className={cn(
+							"bg-transparent",
+							"[&[data-panel-group-direction='vertical']]:h-0",
+						)}
+						hitAreaMargins={{ coarse: 5, fine: 15 }}
 						withHandle
 						onDoubleClick={() => handleHandleDoubleClick({ ref: panelTwo })}
-					>
-						<div />
-					</ResizableHandle>
+					></ResizableHandle>
 					<ResizablePanel
 						defaultSize={50}
 						ref={panelThree}
 						id="panel-three"
 						collapsible
-						// onCollapse={() => {}}
-						// onExpand={() => {}}
 					>
 						<WebcamPanelContent
 							panelId="panel-three"

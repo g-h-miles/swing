@@ -11,7 +11,7 @@ export async function getAvailableWebcams(): Promise<MediaDeviceInfo[]> {
 	}
 }
 
-export async function requestCameraStream() {
+async function requestCameraStream() {
 	try {
 		const stream = await navigator.mediaDevices.getUserMedia({ video: true });
 		return stream;
@@ -21,7 +21,7 @@ export async function requestCameraStream() {
 	}
 }
 
-export async function requestMicrophoneStream() {
+async function requestMicrophoneStream() {
 	try {
 		const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 		return stream;
@@ -44,13 +44,13 @@ export async function requestCameraAndMicrophoneStream() {
 	}
 }
 
-export const storage: Storage = localStorage;
-export const storageKeys = {
+const storage: Storage = localStorage;
+const storageKeys = {
 	camera: "camera",
 	videoEnabled: "videoEnabled",
 };
 
-export const getPanelStorage = (storageKey: string) => {
+const getPanelStorage = (storageKey: string) => {
 	const selectedCameraString = storage.getItem(
 		`${storageKey}.${storageKeys.camera}`,
 	);

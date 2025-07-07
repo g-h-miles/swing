@@ -16,7 +16,8 @@ export function WebcamStatusText({ status }: { status: WebcamStatus }) {
 		<div
 			className={cn(
 				`${glassStyles.menuItem} ${glassStyles.hover} focus:${glassStyles.hover.replace("hover:", "")} ${glassStyles.borderRadius} ${glassStyles.transition} font-medium ${glassStyles.primaryText} text-sm`,
-				"flex items-center gap-1 text-xs font-mono bg-white/10 cursor-default",
+				"flex items-center gap-1 text-xs font-mono bg-transparent  cursor-default @[150px]:bg-white/10",
+				"transition-all duration-300",
 			)}
 		>
 			<span
@@ -27,7 +28,7 @@ export function WebcamStatusText({ status }: { status: WebcamStatus }) {
 					backgroundColor: color,
 				}}
 			/>
-			{label}
+			<span className="@[150px]:opacity-100 opacity-0">{label}</span>
 		</div>
 	);
 }

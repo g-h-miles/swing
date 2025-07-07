@@ -1,5 +1,6 @@
 import * as React from "react"
-import { DotsSixVerticalIcon } from "@phosphor-icons/react"
+// import { GripVerticalIcon } from "lucide-react"
+import {DotsThreeOutlineVerticalIcon} from "@phosphor-icons/react"
 import * as ResizablePrimitive from "react-resizable-panels"
 
 import { cn } from "@/lib/utils"
@@ -29,8 +30,10 @@ function ResizablePanel({
 function ResizableHandle({
   withHandle,
   className,
+  handleClassName,
   ...props
 }: React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle> & {
+  handleClassName?: string
   withHandle?: boolean
 }) {
   return (
@@ -43,8 +46,8 @@ function ResizableHandle({
       {...props}
     >
       {withHandle && (
-        <div className="bg-transparent z-10 flex h-4 w-3 items-center justify-center rounded-xs ">
-          <DotsSixVerticalIcon className="size-4 fill-border" />
+        <div className={cn("bg-border z-10 flex h-4 w-1 items-center justify-center rounded-xs border-none", handleClassName)}>
+          <DotsThreeOutlineVerticalIcon className={cn("size-2.5 fill-border")} />
         </div>
       )}
     </ResizablePrimitive.PanelResizeHandle>

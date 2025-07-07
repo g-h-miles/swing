@@ -3,13 +3,14 @@ import { cn } from "@/lib/utils";
 import { ArrowUpIcon } from "@phosphor-icons/react";
 import { PlayIcon, StopIcon } from "@phosphor-icons/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Fragment } from "react/jsx-runtime";
+import { GlassBtnBg } from "./glass-btn-bg";
 import {
 	type ReplayPlayerHandles,
 	ReplayPlayerMini,
 } from "./replay-player-mini";
-import { Button } from "./ui/button";
+
 import { Separator } from "./ui/separator";
 
 const tags = Array.from({ length: 50 }).map(
@@ -19,7 +20,7 @@ const tags = Array.from({ length: 50 }).map(
 export function ReplayScroll({ className }: { className?: string }) {
 	const parentRef = useRef<HTMLDivElement>(null);
 	const playerRefs = useRef<Record<string, ReplayPlayerHandles | null>>({});
-	const [isPlaying, setIsPlaying] = useState(true);
+	const [isPlayingAll, setIsPlayingAll] = useState(true);
 
 	const rowVirtualizer = useVirtualizer({
 		count: tags.length,
@@ -41,37 +42,44 @@ export function ReplayScroll({ className }: { className?: string }) {
 		rowVirtualizer.scrollToIndex(0, { align: "start", behavior: "smooth" });
 	};
 
-	const handlePlayPause = () => {
-		setIsPlaying(!isPlaying);
+	const handlePlayPauseAll = () => {
+		setIsPlayingAll(!isPlayingAll);
 	};
+
+	useEffect(() => {
+		for (const key in playerRefs.current) {
+			const player = playerRefs.current[key];
+			if (!player) continue;
+
+			if (isPlayingAll) {
+				player.play();
+			}
+			if (!isPlayingAll) {
+				player.pause();
+			}
+		}
+	}, [isPlayingAll]);
 
 	return (
 		// The parent container must be relative for absolute positioning of children.
 		<div
 			className={cn(
-				"relative h-full rounded-xs border",
+				"relative h-full rounded-sm border",
 				glassStyles.shadow,
 				glassStyles.blur,
 				className,
 			)}
 		>
-			<Button
-				className={cn(
-					"absolute top-2 right-2 z-10 h-10 w-10 transition-opacity duration-600",
-					"fancy-fill",
-					"bg-white/5",
-					"bg-blend-overlay",
-					glassStyles.border,
-					glassStyles.buttonHover,
-				)}
-				onClick={handlePlayPause}
+			<GlassBtnBg
+				onClick={handlePlayPauseAll}
+				className="absolute top-2 right-2"
 			>
-				{!isPlaying ? (
+				{!isPlayingAll ? (
 					<PlayIcon className="size-4" />
 				) : (
 					<StopIcon className="size-4" />
 				)}
-			</Button>
+			</GlassBtnBg>
 			<div ref={parentRef} className="h-full overflow-y-auto">
 				<div
 					className="relative w-full"
@@ -86,34 +94,22 @@ export function ReplayScroll({ className }: { className?: string }) {
 						}}
 					>
 						{virtualItems.map((virtualItem) => {
-							if (
-								playerRefs.current[virtualItem.key.toString()]?.isPlaying &&
-								!isPlaying
-							) {
-								playerRefs.current[virtualItem.key.toString()]?.pause();
-							}
-							if (
-								!playerRefs.current[virtualItem.key.toString()]?.isPlaying &&
-								isPlaying
-							) {
-								playerRefs.current[virtualItem.key.toString()]?.play();
-							}
 							const tag = tags[virtualItem.index];
 							return (
 								<Fragment key={virtualItem.key}>
 									<div
 										data-index={virtualItem.index}
-										className="text-sm h-32 rounded-md border border-lime-400 relative"
+										className="text-sm h-20 lg:h-32 rounded-sm hover:border hover:border-lime-400 relative cursor-pointer my-auto"
 									>
 										<ReplayPlayerMini
-											autoPlay={isPlaying}
+											autoPlay={true}
 											ref={(el) => {
 												playerRefs.current[virtualItem.key.toString()] = el;
 											}}
 										/>
 										<span
 											className={cn(
-												"text-xs text-muted-foreground px-2 py-1 rounded-md absolute top-1 left-1 z-10",
+												"text-xs text-muted-foreground px-2 py-1 rounded-sm absolute top-1 left-1 z-10",
 												"fancy-fill",
 												"bg-white/5",
 												"bg-blend-overlay",
@@ -140,22 +136,13 @@ export function ReplayScroll({ className }: { className?: string }) {
 
 			{/* The "Scroll to Top" button */}
 			{showScrollToTop && (
-				<Button
-					variant="ghost"
-					size="icon"
+				<GlassBtnBg
 					onClick={handleScrollToTop}
-					className={cn(
-						"absolute top-2 left-2 z-10 h-10 w-10 transition-opacity duration-600",
-						"fancy-fill",
-						"bg-white/5",
-						"bg-blend-overlay",
-						glassStyles.border,
-						glassStyles.buttonHover,
-					)}
 					aria-label="Scroll to top"
+					className="absolute top-2 left-2"
 				>
 					<ArrowUpIcon className="h-4 w-4" />
-				</Button>
+				</GlassBtnBg>
 			)}
 		</div>
 	);
