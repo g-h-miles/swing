@@ -67,7 +67,7 @@ export function ResizableDemo({
 			autoSaveId={LAYOUT_KEY}
 			direction="horizontal"
 			className={cn(
-				"w-full  md:max-w-[min(80%,_2000px)]   rounded-xs pl-1",
+				"w-full  md:max-w-[min(80%,_2000px)]   rounded-xs ",
 				// "border border-border ",
 				"md:min-w-[450px] h-full",
 				className,
