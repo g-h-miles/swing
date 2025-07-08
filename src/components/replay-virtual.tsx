@@ -6,20 +6,15 @@ import { PlayIcon, StopIcon } from "@phosphor-icons/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Fragment } from "react/jsx-runtime";
-import { useShallow } from "zustand/react/shallow";
 import { GlassBtnBg } from "./glass-btn-bg";
 import { ReplayPlayerMini } from "./replay-player-mini";
 import { Separator } from "./ui/separator";
 
 export function ReplayScroll({ className }: { className?: string }) {
-	const { replays, playAll, pauseAll, playingReplays } = useReplayStore(
-		useShallow((state) => ({
-			replays: state.replays,
-			playAll: state.playAll,
-			pauseAll: state.pauseAll,
-			playingReplays: state.playingReplays,
-		})),
-	);
+	const replays = useReplayStore((state) => state.replays);
+	const playAll = useReplayStore((state) => state.playAll);
+	const pauseAll = useReplayStore((state) => state.pauseAll);
+	const playingReplays = useReplayStore((state) => state.playingReplays);
 	const isPlayingAll = playingReplays.length > 0;
 	const parentRef = useRef<HTMLDivElement>(null);
 
@@ -87,7 +82,7 @@ export function ReplayScroll({ className }: { className?: string }) {
 			>
 				<GlassBtnBg
 					onClick={handlePlayPauseAll}
-					className="absolute top-2 right-2"
+					className="scroll-anchor-target"
 				>
 					{!isPlayingAll ? (
 						<PlayIcon className="size-4" />
@@ -95,7 +90,7 @@ export function ReplayScroll({ className }: { className?: string }) {
 						<StopIcon className="size-4" />
 					)}
 				</GlassBtnBg>
-				<div ref={parentRef} className="h-full overflow-y-auto">
+				<div ref={parentRef} className="h-full overflow-y-auto scrollbar " id='scroll-element'>
 					<div
 						className="relative w-full"
 						style={{
@@ -115,7 +110,7 @@ export function ReplayScroll({ className }: { className?: string }) {
 									<Fragment key={virtualItem.key}>
 										<div
 											data-index={virtualItem.index}
-											className="text-sm h-12 md:h-16 lg:h-24 xl:h-36  2xl:h-46 3xl:h-40 rounded-sm hover:border hover:border-lime-400 relative cursor-pointer"
+											className="scroll-anchor text-sm h-12 md:h-16 lg:h-24 xl:h-36  2xl:h-46 3xl:h-40 rounded-sm hover:border hover:border-lime-400 relative cursor-pointer"
 										>
 											<ReplayPlayerMini replayId={replay.id} />
 											<span

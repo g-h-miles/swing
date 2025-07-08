@@ -18,30 +18,19 @@ export interface ReplayPlayerHandles {
 	volume: number;
 }
 
-export const ReplayPlayerMini = forwardRef<
-	ReplayPlayerHandles,
-	{ replayId: string; autoPlay?: boolean }
->(({ replayId, autoPlay = false }, ref) => {
+export interface ReplayPlayerMiniProps {
+	replayId: string;
+	autoPlay?: boolean;
+}
+
+export const ReplayPlayerMini = ({ replayId, autoPlay = false }: ReplayPlayerMiniProps) => {
 	const videoRef = useRef<HTMLVideoElement>(null);
+	const replay = useReplayStore((state) => state.replays.find((r) => r.id === replayId));
 
-	const { replay, playerState, isPlaying } = useReplayStore(
-		useShallow((state) => ({
-			replay: state.replays.find((r) => r.id === replayId),
-			playerState: state.playerStates[replayId],
-			isPlaying: state.playingReplays.includes(replayId),
-		})),
-	);
+	const isPlaying = useReplayStore((state) => state.playingReplays.includes(replayId));
+	const setPlayerState = useReplayStore(useCallback((state) => state.setPlayerState, []));
 
-	const playReplay = useReplayStore((state) => state.playReplay);
-	const pauseReplay = useReplayStore((state) => state.pauseReplay);
 
-	const play = useCallback(() => {
-		playReplay(replayId);
-	}, [playReplay, replayId]);
-
-	const pause = useCallback(() => {
-		pauseReplay(replayId);
-	}, [pauseReplay, replayId]);
 
 	// Sync store state with video element - store is the single source of truth
 	useEffect(() => {
@@ -56,23 +45,7 @@ export const ReplayPlayerMini = forwardRef<
 		}
 	}, [isPlaying]);
 
-	useImperativeHandle(
-		ref,
-		() => ({
-			play,
-			pause,
-			state: playerState?.state || "mounting",
-			rate: playerState?.playbackRate || 1,
-			volume: playerState?.volume || 1,
-		}),
-		[
-			play,
-			pause,
-			playerState?.state,
-			playerState?.playbackRate,
-			playerState?.volume,
-		],
-	);
+
 
 	if (!replay) {
 		return (
@@ -84,9 +57,18 @@ export const ReplayPlayerMini = forwardRef<
 
 	return (
 		<MediaPlayer className="w-full h-full rounded-sm border-0">
-			<MediaPlayerVideo muted loop ref={videoRef} preload="metadata">
-				<source src={replay.url} type="video/mp4" />
+			<MediaPlayerVideo muted loop ref={videoRef} preload="metadata"
+				onPlay={() => setPlayerState(replayId, "playing")}
+				onPause={() => setPlayerState(replayId, "paused")}
+				onEnded={() => setPlayerState(replayId, "ended")}
+				onError={() => setPlayerState(replayId, "error")}
+				onLoadStart={() => setPlayerState(replayId, "loading")}
+			
+			
+			
+			>
+				<source src={`${replay.url}?x=${replayId}`} type="video/mp4" />
 			</MediaPlayerVideo>
 		</MediaPlayer>
 	);
-});
+};

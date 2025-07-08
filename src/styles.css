@@ -197,52 +197,19 @@ code {
   height: auto;
 }
 
-.Resizer {
-  background: var(--border);
-  opacity: 1;
-  z-index: 1;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  -moz-background-clip: padding;
-  -webkit-background-clip: padding;
-  background-clip: padding-box;
+.scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
 }
 
-.Resizer:hover {
-  -webkit-transition: all 2s ease;
-  transition: all 2s ease;
+.scroll-anchor {
+  anchor-name: --scroll-anchor;
 }
 
-.Resizer.horizontal {
-  height: 11px;
-  margin: -5px 0;
-  border-top: 5px solid var(--border);
-  border-bottom: 5px solid var(--border);
-  cursor: row-resize;
-  width: 100%;
-}
-
-.Resizer.horizontal:hover {
-  border-top: 5px solid var(--border);
-  border-bottom: 5px solid var(--border);
-}
-
-.Resizer.vertical {
-  width: 11px;
-  margin: 0 -5px;
-  border-left: 5px solid var(--border);
-  border-right: 5px solid var(--border);
-  cursor: col-resize;
-}
-
-.Resizer.vertical:hover {
-  border-left: 5px solid var(--border);
-  border-right: 5px solid var(--border);
-}
-.Resizer.disabled {
-  cursor: not-allowed;
-}
-.Resizer.disabled:hover {
-  border-color: transparent;
+.scroll-anchor-target {
+  position: fixed;
+  position-anchor: --scroll-anchor;
+  right: anchor(right);
+  margin-right: calc(var(--spacing) * 2);
+  top: calc(var(--spacing) * 2);
 }

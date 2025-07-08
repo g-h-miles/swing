@@ -32,6 +32,7 @@ interface ReplayStore {
 	playerStates: Record<string, ReplayPlayerState>;
 	playingReplays: string[]; // Changed from Set to array
 	loadedReplays: Record<string, string>;
+	
 
 	addReplay: (replay: ReplayData) => void;
 	addReplays: (replays: ReplayData[]) => void;
