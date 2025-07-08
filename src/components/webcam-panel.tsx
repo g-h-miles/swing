@@ -2,6 +2,7 @@
 import { glassStyles } from "@/glass";
 import { useWebcamStore } from "@/lib/stores/webcam-store";
 import { cn } from "@/lib/utils";
+import { useCallback } from "react";
 import { Webcam } from "./ui/webcam";
 import { WebcamDropdown } from "./webcam-dropdown";
 import { WebcamStatusText } from "./webcam-status-description";
@@ -9,13 +10,13 @@ import { WebcamStatusText } from "./webcam-status-description";
 export const WebcamPanelContent = ({
 	panelId,
 	className,
-	availableWebcams,
 }: {
 	panelId: string;
 	className?: string;
-	availableWebcams: MediaDeviceInfo[];
 }) => {
-	const selection = useWebcamStore((state) => state.selections[panelId]);
+	const selection = useWebcamStore(
+		useCallback((state) => state.selections[panelId], [panelId]),
+	);
 	if (!selection) {
 		return null;
 	}
@@ -31,20 +32,14 @@ export const WebcamPanelContent = ({
 				)}
 			>
 				<div className="absolute top-2 left-2 z-10">
-					{true && (
+					{
 						<WebcamStatusText
 							status={!deviceId ? "inactive" : videoEnabled ? "live" : "ready"}
 						/>
-					)}
+					}
 				</div>
 				<div className="absolute top-2 right-2 z-10">
-					<WebcamDropdown
-						panelId={panelId}
-						availableWebcams={availableWebcams}
-						// onCameraSelect={handleCameraSelect}
-						// onVideoStart={handleVideoStart}
-						// onVideoStop={handleVideoStop}
-					/>
+					<WebcamDropdown panelId={panelId} />
 				</div>
 				{videoEnabled && deviceId && (
 					<div className="relative w-full h-full flex items-center justify-center overflow-hidden">

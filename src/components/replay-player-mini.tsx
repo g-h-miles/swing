@@ -1,151 +1,92 @@
-import {
-	MediaPlayer,
-	// MediaPlayerControls,
-	// MediaPlayerControlsOverlay,
-	// MediaPlayerFullscreen,
-	// MediaPlayerPiP,
-	// MediaPlayerPlay,
-	// MediaPlayerPlaybackSpeed,
-	// MediaPlayerSeek,
-	// MediaPlayerSeekBackward,
-	// MediaPlayerSeekForward,
-	// MediaPlayerTime,
-	MediaPlayerVideo,
-	// MediaPlayerVolume,
-	// useMediaPlayer,
-} from "@/components/ui/media-player";
-// import type { MediaController } from "media-chrome";
+// components/replay-player-mini.tsx
+import { MediaPlayer, MediaPlayerVideo } from "@/components/ui/media-player";
+import { useReplayStore } from "@/lib/stores/replay-store";
 import {
 	forwardRef,
 	useCallback,
+	useEffect,
 	useImperativeHandle,
 	useRef,
-	useState,
 } from "react";
+import { useShallow } from "zustand/react/shallow";
+
 export interface ReplayPlayerHandles {
 	play: () => void;
 	pause: () => void;
-	state: replayState;
+	state: string;
 	rate: number;
 	volume: number;
 }
 
-type replayState =
-	| "playing"
-	| "paused"
-	| "ended"
-	| "loading"
-	| "error"
-	| "mounting";
-
 export const ReplayPlayerMini = forwardRef<
 	ReplayPlayerHandles,
-	{ autoPlay: boolean }
->(({ autoPlay }, ref) => {
+	{ replayId: string; autoPlay?: boolean }
+>(({ replayId, autoPlay = false }, ref) => {
 	const videoRef = useRef<HTMLVideoElement>(null);
-	const [videoState, setVideoState] = useState<replayState>("mounting");
-	const [playbackRate, setPlaybackRate] = useState(1);
-	const [volume, setVolume] = useState(1);
+
+	const { replay, playerState, isPlaying } = useReplayStore(
+		useShallow((state) => ({
+			replay: state.replays.find((r) => r.id === replayId),
+			playerState: state.playerStates[replayId],
+			isPlaying: state.playingReplays.includes(replayId),
+		})),
+	);
+
+	const playReplay = useReplayStore((state) => state.playReplay);
+	const pauseReplay = useReplayStore((state) => state.pauseReplay);
 
 	const play = useCallback(() => {
-		videoRef.current?.play();
-	}, []);
+		playReplay(replayId);
+	}, [playReplay, replayId]);
 
 	const pause = useCallback(() => {
-		videoRef.current?.pause();
-	}, []);
+		pauseReplay(replayId);
+	}, [pauseReplay, replayId]);
+
+	// Sync store state with video element - store is the single source of truth
+	useEffect(() => {
+		if (!videoRef.current) return;
+
+		if (isPlaying && videoRef.current.paused) {
+			videoRef.current.play().catch(() => {
+				// Ignore play errors (e.g., when component unmounts)
+			});
+		} else if (!isPlaying && !videoRef.current.paused) {
+			videoRef.current.pause();
+		}
+	}, [isPlaying]);
 
 	useImperativeHandle(
 		ref,
 		() => ({
 			play,
 			pause,
-			state: videoState,
-			rate: playbackRate,
-			volume: volume,
+			state: playerState?.state || "mounting",
+			rate: playerState?.playbackRate || 1,
+			volume: playerState?.volume || 1,
 		}),
-		[videoState, playbackRate, volume, play, pause],
+		[
+			play,
+			pause,
+			playerState?.state,
+			playerState?.playbackRate,
+			playerState?.volume,
+		],
 	);
 
-	const isPlaying = videoState === "playing";
-	const handlePlay = useCallback(() => {
-		if (!isPlaying) setVideoState("playing");
-	}, [isPlaying]);
-
-	const isPaused = videoState === "paused";
-	const handlePause = useCallback(() => {
-		if (!isPaused) setVideoState("paused");
-	}, [isPaused]);
-
-	const isEnded = videoState === "ended";
-	const handleEnded = useCallback(() => {
-		if (!isEnded) setVideoState("ended");
-	}, [isEnded]);
-
-	const isError = videoState === "error";
-	const handleError = useCallback(() => {
-		if (!isError) setVideoState("error");
-	}, [isError]);
-
-	const isLoading = videoState === "loading";
-	const handleLoadStart = useCallback(() => {
-		if (!isLoading) setVideoState("loading");
-	}, [isLoading]);
-
-	const handleRateChange = useCallback(
-		(e: React.SyntheticEvent<HTMLVideoElement>) => {
-			const newRate = e.currentTarget.playbackRate;
-			if (newRate !== playbackRate) setPlaybackRate(newRate);
-		},
-		[playbackRate],
-	);
-
-	const handleVolumeChange = useCallback(
-		(e: React.SyntheticEvent<HTMLVideoElement>) => {
-			const newVolume = e.currentTarget.volume;
-			if (newVolume !== volume) setVolume(newVolume);
-		},
-		[volume],
-	);
+	if (!replay) {
+		return (
+			<div className="w-full h-full bg-gray-200 animate-pulse rounded-sm flex items-center justify-center">
+				<span className="text-sm text-gray-500">Loading...</span>
+			</div>
+		);
+	}
 
 	return (
 		<MediaPlayer className="w-full h-full rounded-sm border-0">
-			<MediaPlayerVideo
-				autoPlay={autoPlay}
-				muted
-				loop
-				ref={videoRef}
-				onPlay={handlePlay}
-				onPause={handlePause}
-				onEnded={handleEnded}
-				onError={handleError}
-				onLoadStart={handleLoadStart}
-				onRateChange={handleRateChange}
-				onVolumeChange={handleVolumeChange}
-			>
-				<source
-					src="https://www.diceui.com/assets/cloud.mp4"
-					type="video/mp4"
-				/>
+			<MediaPlayerVideo muted loop ref={videoRef} preload="metadata">
+				<source src={replay.url} type="video/mp4" />
 			</MediaPlayerVideo>
-			{/* <MediaPlayerControls className="flex-col items-start gap-2.5">
-				<MediaPlayerControlsOverlay />
-				<MediaPlayerSeek />
-				<div className="flex w-full items-center gap-2">
-					<div className="flex flex-1 items-center gap-2">
-						<MediaPlayerPlay />
-						<MediaPlayerSeekBackward />
-						<MediaPlayerSeekForward />
-						<MediaPlayerVolume expandable />
-						<MediaPlayerTime />
-					</div>
-					<div className="flex items-center gap-2">
-						<MediaPlayerPlaybackSpeed />
-						<MediaPlayerPiP />
-						<MediaPlayerFullscreen />
-					</div>
-				</div>
-			</MediaPlayerControls> */}
 		</MediaPlayer>
 	);
 });

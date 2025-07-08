@@ -1,8 +1,5 @@
 //webcam-dropdown.tsx component
 
-import type React from "react";
-import { useCallback, useEffect, useState } from "react";
-
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -14,8 +11,9 @@ import {
 import { glassStyles } from "@/glass";
 import { useAvailableWebcamsQuery } from "@/lib/hooks/use-available-webcams";
 import { useCameraPermissionQuery } from "@/lib/hooks/use-permission";
-import { useSelectedWebcam, useVideoEnabled } from "@/lib/hooks/use-persisted";
 import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
+import type React from "react";
+import { useCallback, useState } from "react";
 
 import { useWebcamStore } from "@/lib/stores/webcam-store";
 
@@ -27,7 +25,6 @@ import {
 	VideoCameraSlashIcon,
 	WarningCircleIcon,
 } from "@phosphor-icons/react";
-import { useDefault } from "@uidotdev/usehooks";
 
 interface MenuItemProps {
 	icon: React.ReactNode;
@@ -55,16 +52,8 @@ type RequestPermissionStatus = "idle" | "loading" | "error" | "success";
 
 export function WebcamDropdown({
 	panelId,
-	availableWebcams,
-	// onCameraSelect,
-	// onVideoStart,
-	// onVideoStop,
 }: {
 	panelId: string;
-	availableWebcams: MediaDeviceInfo[];
-	// onCameraSelect: (camera: MediaDeviceInfo) => void;
-	// onVideoStart: () => void;
-	// onVideoStop: () => void;
 }) {
 	const {
 		data: cameraPermission,
@@ -72,11 +61,45 @@ export function WebcamDropdown({
 		isError: isCameraError,
 	} = useCameraPermissionQuery();
 
-	const selection = useWebcamStore((state) => state.selections[panelId]);
+	const {
+		data: webcams,
+		isLoading: isWebcamsLoading,
+		isError: isWebcamsError,
+		refetch: refetchWebcams,
+	} = useAvailableWebcamsQuery();
+
+	const selection = useWebcamStore(
+		useCallback((state) => state.selections[panelId], [panelId]),
+	);
 	const setCamera = useWebcamStore((state) => state.setCamera);
 	const setVideoEnabled = useWebcamStore((state) => state.setVideoEnabled);
 
-	//Store initialization
+	const [requestPermissionStatus, setRequestPermissionStatus] =
+		useState<RequestPermissionStatus>("idle");
+
+	const handleCameraSelect = useCallback(
+		(camera: MediaDeviceInfo) => {
+			setCamera(panelId, camera.deviceId);
+		},
+		[panelId, setCamera],
+	);
+
+	const handleVideoToggle = useCallback(() => {
+		setVideoEnabled(panelId, !selection.videoEnabled);
+	}, [panelId, selection.videoEnabled, setVideoEnabled]);
+
+	const handleRequestPermission = useCallback(async () => {
+		setRequestPermissionStatus("loading");
+		try {
+			await requestCameraAndMicrophoneStream();
+			await refetchWebcams();
+			setRequestPermissionStatus("success");
+		} catch (error) {
+			console.log("Permission request failed:", error);
+			setRequestPermissionStatus("error");
+		}
+	}, [refetchWebcams]);
+
 	if (!selection) {
 		return (
 			<Button
@@ -89,53 +112,6 @@ export function WebcamDropdown({
 			</Button>
 		);
 	}
-
-	const {
-		data: webcams,
-		isLoading: isWebcamsLoading,
-		isError: isWebcamsError,
-	} = useAvailableWebcamsQuery();
-
-	// const [selectedCamera] = useSelectedWebcam(panelId);
-	// const [isVideoEnabled, setIsVideoEnabled] = useVideoEnabled(panelId);
-	const [requestPermissionStatus, setRequestPermissionStatus] =
-		useState<RequestPermissionStatus>("idle");
-
-	// const handleCameraSelect = useCallback(
-	// 	(camera: MediaDeviceInfo) => {
-	// 		onCameraSelect(camera);
-	// 	},
-	// 	[onCameraSelect],
-	// );
-
-	const handleCameraSelect = (camera: MediaDeviceInfo) => {
-		setCamera(panelId, camera.deviceId);
-	};
-
-	const handleVideoToggle = () => {
-		setVideoEnabled(panelId, !selection.videoEnabled);
-	};
-
-	const handleRequestPermission = async () => {
-		setRequestPermissionStatus("loading");
-		try {
-			await requestCameraAndMicrophoneStream();
-			setRequestPermissionStatus("success");
-			// refetchWebcams()
-		} catch (error) {
-			console.log("Permission request failed:", error);
-			setRequestPermissionStatus("error");
-		}
-	};
-
-	// const handleVideoToggle = () => {
-	// 	setIsVideoEnabled(!isVideoEnabled);
-	// 	if (!isVideoEnabled) {
-	// 		onVideoStart();
-	// 	} else {
-	// 		onVideoStop();
-	// 	}
-	// };
 
 	const getButtonIcon = () => {
 		if (
@@ -160,9 +136,7 @@ export function WebcamDropdown({
 	};
 
 	const getCameraLabel = (cameraId: string) => {
-		const camera = availableWebcams.find(
-			(camera) => camera.deviceId === cameraId,
-		);
+		const camera = webcams?.find((camera) => camera.deviceId === cameraId);
 		if (!camera) {
 			return;
 		}
@@ -195,12 +169,10 @@ export function WebcamDropdown({
 		return "Click to allow camera access";
 	};
 
-	// Show loading/error states even when permission is unknown
 	const isPermissionGranted = cameraPermission?.state === "granted";
 	const isStillLoading = isCameraLoading || isWebcamsLoading;
 	const hasError = isCameraError || isWebcamsError;
 
-	// Always show button if loading, error, or permission not granted
 	if (!isPermissionGranted || isStillLoading || hasError) {
 		return (
 			<Button
@@ -215,18 +187,13 @@ export function WebcamDropdown({
 		);
 	}
 
-	// Permission granted - show dropdown
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<Button
 					variant="ghost"
 					className={`w-10 h-10 p-0 cursor-pointer ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
-					title={
-						selection.deviceId
-							? getCameraLabel(selection.deviceId)
-							: "Select Camera"
-					}
+					title={"Select Camera"}
 				>
 					<VideoCameraIcon className="w-4 h-4" />
 				</Button>
