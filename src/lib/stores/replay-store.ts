@@ -28,14 +28,10 @@ export interface ReplayPlayerState {
 }
 
 interface ReplayStore {
-	replays: ReplayData[];
 	playerStates: Record<string, ReplayPlayerState>;
 	playingReplays: string[]; // Changed from Set to array
-	loadedReplays: Record<string, string>;
-	
 
-	addReplay: (replay: ReplayData) => void;
-	addReplays: (replays: ReplayData[]) => void;
+	initializePlayerStates: (replays: ReplayData[]) => void;
 	setPlayerState: (replayId: string, state: ReplayState) => void;
 	setPlayerProperty: (
 		replayId: string,
@@ -44,7 +40,7 @@ interface ReplayStore {
 	) => void;
 	playReplay: (replayId: string) => void;
 	pauseReplay: (replayId: string) => void;
-	playAll: () => void;
+	playAll: (replayIds: string[]) => void;
 	pauseAll: () => void;
 }
 
@@ -57,41 +53,18 @@ const createDefaultPlayerState = (): ReplayPlayerState => ({
 });
 
 export const useReplayStore = create<ReplayStore>((set, get) => ({
-	replays: [],
 	playerStates: {},
 	playingReplays: [],
-	loadedReplays: {},
 
-	addReplay: (replay) =>
+	initializePlayerStates: (replays) =>
 		set((state) => {
-			if (state.replays.some((r) => r.id === replay.id)) {
-				return state; // Avoid duplicates
-			}
-			return {
-				replays: [...state.replays, replay],
-				playerStates: {
-					...state.playerStates,
-					[replay.id]: createDefaultPlayerState(),
-				},
-			};
-		}),
-
-	addReplays: (replays) =>
-		set((state) => {
-			const newReplays = [...state.replays];
 			const newPlayerStates = { ...state.playerStates };
-			const existingIds = new Set(state.replays.map((r) => r.id));
-
-			for (const replay of replays) {
-				if (!existingIds.has(replay.id)) {
-					newReplays.push(replay);
+			replays.forEach((replay) => {
+				if (!newPlayerStates[replay.id]) {
 					newPlayerStates[replay.id] = createDefaultPlayerState();
 				}
-			}
-			return {
-				replays: newReplays,
-				playerStates: newPlayerStates,
-			};
+			});
+			return { playerStates: newPlayerStates };
 		}),
 
 	setPlayerState: (replayId, newState) =>
@@ -128,28 +101,10 @@ export const useReplayStore = create<ReplayStore>((set, get) => ({
 			playingReplays: state.playingReplays.filter((id) => id !== replayId),
 		})),
 
-	playAll: () =>
-		set((state) => ({
-			playingReplays: state.replays.map((r) => r.id),
-		})),
+	playAll: (replayIds) => set(() => ({ playingReplays: replayIds })),
 
 	pauseAll: () =>
 		set(() => ({
 			playingReplays: [],
 		})),
 }));
-
-export const initializeDummyData = () => {
-	const dummyReplays = Array.from({ length: 50 }).map((_, i, a) => {
-		const tag = `v1.2.0-beta.${a.length - i}`;
-		return {
-			id: `replay-${i}`,
-			url: "https://www.diceui.com/assets/cloud.mp4",
-			title: tag,
-			createdAt: new Date(),
-		};
-	});
-	const { addReplays, playAll } = useReplayStore.getState();
-	addReplays(dummyReplays);
-	playAll();
-};

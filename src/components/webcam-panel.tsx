@@ -2,7 +2,6 @@
 import { glassStyles } from "@/glass";
 import { useWebcamStore } from "@/lib/stores/webcam-store";
 import { cn } from "@/lib/utils";
-import { useCallback } from "react";
 import { Webcam } from "./ui/webcam";
 import { WebcamDropdown } from "./webcam-dropdown";
 import { WebcamStatusText } from "./webcam-status-description";
@@ -14,9 +13,8 @@ export const WebcamPanelContent = ({
 	panelId: string;
 	className?: string;
 }) => {
-	const selection = useWebcamStore(
-		useCallback((state) => state.selections[panelId], [panelId]),
-	);
+	const selection = useWebcamStore((state) => state.selections[panelId]);
+
 	if (!selection) {
 		return null;
 	}

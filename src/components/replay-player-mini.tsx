@@ -1,14 +1,9 @@
 // components/replay-player-mini.tsx
 import { MediaPlayer, MediaPlayerVideo } from "@/components/ui/media-player";
+import { useReplays } from "@/lib/hooks/use-replays";
 import { useReplayStore } from "@/lib/stores/replay-store";
-import {
-	forwardRef,
-	useCallback,
-	useEffect,
-	useImperativeHandle,
-	useRef,
-} from "react";
-import { useShallow } from "zustand/react/shallow";
+import { useCallback, useEffect, useRef } from "react";
+import { Skeleton } from "./ui/skeleton";
 
 export interface ReplayPlayerHandles {
 	play: () => void;
@@ -23,14 +18,21 @@ export interface ReplayPlayerMiniProps {
 	autoPlay?: boolean;
 }
 
-export const ReplayPlayerMini = ({ replayId, autoPlay = false }: ReplayPlayerMiniProps) => {
+export const ReplayPlayerMini = ({
+	replayId,
+	autoPlay = false,
+}: ReplayPlayerMiniProps) => {
 	const videoRef = useRef<HTMLVideoElement>(null);
-	const replay = useReplayStore((state) => state.replays.find((r) => r.id === replayId));
+	const { data: replays } = useReplays();
 
-	const isPlaying = useReplayStore((state) => state.playingReplays.includes(replayId));
-	const setPlayerState = useReplayStore(useCallback((state) => state.setPlayerState, []));
+	const replay = replays?.find((r) => r.id === replayId);
 
-
+	const isPlaying = useReplayStore((state) =>
+		state.playingReplays.includes(replayId),
+	);
+	const setPlayerState = useReplayStore(
+		useCallback((state) => state.setPlayerState, []),
+	);
 
 	// Sync store state with video element - store is the single source of truth
 	useEffect(() => {
@@ -45,29 +47,31 @@ export const ReplayPlayerMini = ({ replayId, autoPlay = false }: ReplayPlayerMin
 		}
 	}, [isPlaying]);
 
-
-
 	if (!replay) {
 		return (
-			<div className="w-full h-full bg-gray-200 animate-pulse rounded-sm flex items-center justify-center">
-				<span className="text-sm text-gray-500">Loading...</span>
+			<div className="w-full">
+				<Skeleton
+					key={`skeleton-${Math.random()}`}
+					className="bg-gray-400 h-24 w-full rounded-md"
+				/>
 			</div>
 		);
 	}
 
 	return (
-		<MediaPlayer className="w-full h-full rounded-sm border-0">
-			<MediaPlayerVideo muted loop ref={videoRef} preload="metadata"
+		<MediaPlayer className="w-full  rounded-sm border-0">
+			<MediaPlayerVideo
+				muted
+				loop
+				ref={videoRef}
+				preload="metadata"
 				onPlay={() => setPlayerState(replayId, "playing")}
 				onPause={() => setPlayerState(replayId, "paused")}
 				onEnded={() => setPlayerState(replayId, "ended")}
 				onError={() => setPlayerState(replayId, "error")}
 				onLoadStart={() => setPlayerState(replayId, "loading")}
-			
-			
-			
 			>
-				<source src={`${replay.url}?x=${replayId}`} type="video/mp4" />
+				<source src={`${replay.url}`} type="video/mp4" />
 			</MediaPlayerVideo>
 		</MediaPlayer>
 	);

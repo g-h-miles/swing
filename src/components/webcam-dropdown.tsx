@@ -68,9 +68,7 @@ export function WebcamDropdown({
 		refetch: refetchWebcams,
 	} = useAvailableWebcamsQuery();
 
-	const selection = useWebcamStore(
-		useCallback((state) => state.selections[panelId], [panelId]),
-	);
+	const selection = useWebcamStore((state) => state.selections[panelId]);
 	const setCamera = useWebcamStore((state) => state.setCamera);
 	const setVideoEnabled = useWebcamStore((state) => state.setVideoEnabled);
 

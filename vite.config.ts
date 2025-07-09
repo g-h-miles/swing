@@ -10,5 +10,9 @@ export default defineConfig({
   plugins: [tanstackRouter({
       target: 'react',
       autoCodeSplitting: true,
-    }),viteReact(), tailwindcss(), mkcert(), tsconfigPaths()],
+    }),viteReact({
+      babel: {
+        plugins: [["babel-plugin-react-compiler", {target: "19"}]]
+      }
+    }), tailwindcss(), mkcert(), tsconfigPaths()],
 });

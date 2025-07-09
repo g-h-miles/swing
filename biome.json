@@ -29,6 +29,12 @@
 			"recommended": true,
 			"style": {
 				"useSelfClosingElements": "off"
+			},
+			"complexity": {
+				"noForEach": "off"
+			},
+			"correctness": {
+				"noUnknownProperty": "warn"
 			}
 		}
 	},

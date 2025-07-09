@@ -1,40 +1,35 @@
 import { glassStyles } from "@/glass";
-import { initializeDummyData, useReplayStore } from "@/lib/stores/replay-store";
+import { useReplays } from "@/lib/hooks/use-replays";
+import { useReplayStore } from "@/lib/stores/replay-store";
 import { cn } from "@/lib/utils";
 import { ArrowUpIcon } from "@phosphor-icons/react";
-import { PlayIcon, StopIcon } from "@phosphor-icons/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Fragment } from "react/jsx-runtime";
 import { GlassBtnBg } from "./glass-btn-bg";
+import { PlayAllBtn } from "./play-all-btn";
+import { ReplayError } from "./replay-error";
+import { ReplayLoader } from "./replay-loader";
 import { ReplayPlayerMini } from "./replay-player-mini";
 import { Separator } from "./ui/separator";
 
 export function ReplayScroll({ className }: { className?: string }) {
-	const replays = useReplayStore((state) => state.replays);
-	const playAll = useReplayStore((state) => state.playAll);
-	const pauseAll = useReplayStore((state) => state.pauseAll);
-	const playingReplays = useReplayStore((state) => state.playingReplays);
-	const isPlayingAll = playingReplays.length > 0;
+	const { data: replays, isLoading, error } = useReplays();
+	const initializePlayerStates = useReplayStore(
+		useCallback((state) => state.initializePlayerStates, []),
+	);
+
 	const parentRef = useRef<HTMLDivElement>(null);
 
 	// Initialize dummy data only once when component mounts
 	useEffect(() => {
-		if (replays.length === 0) {
-			initializeDummyData();
+		if (replays) {
+			initializePlayerStates(replays);
 		}
-	}, [replays.length]);
-
-	const handlePlayPauseAll = useCallback(() => {
-		if (isPlayingAll) {
-			pauseAll();
-		} else {
-			playAll();
-		}
-	}, [isPlayingAll, playAll, pauseAll]);
+	}, [replays, initializePlayerStates]);
 
 	const rowVirtualizer = useVirtualizer({
-		count: replays.length,
+		count: replays?.length ?? 0,
 		getScrollElement: () => parentRef.current,
 		estimateSize: () => 136,
 	});
@@ -53,22 +48,8 @@ export function ReplayScroll({ className }: { className?: string }) {
 		rowVirtualizer.scrollToIndex(0, { align: "start", behavior: "smooth" });
 	}, [rowVirtualizer]);
 
-	if (replays.length === 0) {
-		return (
-			<div
-				className={cn(
-					"relative h-full rounded-sm border flex items-center justify-center",
-					glassStyles.shadow,
-					glassStyles.blur,
-					className,
-				)}
-			>
-				<span className="text-sm text-muted-foreground">
-					Loading replays...
-				</span>
-			</div>
-		);
-	}
+	if (isLoading || !replays) return <ReplayLoader />;
+	if (error) return <ReplayError />;
 
 	return (
 		<div className="h-full w-full py-1">
@@ -80,17 +61,12 @@ export function ReplayScroll({ className }: { className?: string }) {
 					className,
 				)}
 			>
-				<GlassBtnBg
-					onClick={handlePlayPauseAll}
-					className="scroll-anchor-target"
+				<PlayAllBtn />
+				<div
+					ref={parentRef}
+					className="h-full overflow-y-auto scrollbar "
+					id="scroll-element"
 				>
-					{!isPlayingAll ? (
-						<PlayIcon className="size-4" />
-					) : (
-						<StopIcon className="size-4" />
-					)}
-				</GlassBtnBg>
-				<div ref={parentRef} className="h-full overflow-y-auto scrollbar " id='scroll-element'>
 					<div
 						className="relative w-full"
 						style={{
@@ -110,7 +86,7 @@ export function ReplayScroll({ className }: { className?: string }) {
 									<Fragment key={virtualItem.key}>
 										<div
 											data-index={virtualItem.index}
-											className="scroll-anchor text-sm h-12 md:h-16 lg:h-24 xl:h-36  2xl:h-46 3xl:h-40 rounded-sm hover:border hover:border-lime-400 relative cursor-pointer"
+											className="scroll-anchor text-sm min-h-16 rounded-sm hover:border hover:border-lime-400 relative cursor-pointer"
 										>
 											<ReplayPlayerMini replayId={replay.id} />
 											<span
