@@ -25,9 +25,11 @@ const fetchDummyReplays = async (): Promise<ReplayData[]> => {
 	});
 };
 
+export const replayQueryOptions = {
+	queryKey: ["replays"],
+	queryFn: fetchDummyReplays,
+};
+
 export const useReplays = () => {
-	return useQuery({
-		queryKey: ["replays"],
-		queryFn: fetchDummyReplays,
-	});
+	return useQuery(replayQueryOptions);
 };

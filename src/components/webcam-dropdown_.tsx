@@ -18,6 +18,14 @@ import { useCallback, useState } from "react";
 import { useWebcamStore } from "@/lib/stores/webcam-store";
 
 import {
+	readWebcamAtom,
+	setDeviceIdAtom,
+	toggleVideoEnabledAtom,
+} from "@/lib/stores/webcam-atom";
+import { useAtomValue, useSetAtom } from "jotai";
+import { ScopeProvider } from "jotai-scope";
+
+import {
 	CameraIcon,
 	GearSixIcon,
 	SpinnerGapIcon,
@@ -55,6 +63,10 @@ export function WebcamDropdown({
 }: {
 	panelId: string;
 }) {
+	const selection = useAtomValue(readWebcamAtom(panelId));
+	const setDeviceId = useSetAtom(setDeviceIdAtom(panelId));
+	const toggleVideo = useSetAtom(toggleVideoEnabledAtom(panelId));
+
 	const {
 		data: cameraPermission,
 		isLoading: isCameraLoading,
@@ -68,23 +80,8 @@ export function WebcamDropdown({
 		refetch: refetchWebcams,
 	} = useAvailableWebcamsQuery();
 
-	const selection = useWebcamStore((state) => state.selections[panelId]);
-	const setCamera = useWebcamStore((state) => state.setCamera);
-	const setVideoEnabled = useWebcamStore((state) => state.setVideoEnabled);
-
 	const [requestPermissionStatus, setRequestPermissionStatus] =
 		useState<RequestPermissionStatus>("idle");
-
-	const handleCameraSelect = useCallback(
-		(camera: MediaDeviceInfo) => {
-			setCamera(panelId, camera.deviceId);
-		},
-		[panelId, setCamera],
-	);
-
-	const handleVideoToggle = useCallback(() => {
-		setVideoEnabled(panelId, !selection?.videoEnabled);
-	}, [panelId, selection?.videoEnabled, setVideoEnabled]);
 
 	const handleRequestPermission = useCallback(async () => {
 		setRequestPermissionStatus("loading");
@@ -215,7 +212,7 @@ export function WebcamDropdown({
 					{webcams?.map((camera) => (
 						<DropdownMenuItem
 							key={camera.deviceId}
-							onClick={() => handleCameraSelect(camera)}
+							onClick={() => setDeviceId(camera.deviceId)}
 							className={`${glassStyles.menuItem} ${glassStyles.hover} focus:${glassStyles.hover.replace("hover:", "")} ${glassStyles.borderRadius} ${glassStyles.transition} ${glassStyles.primaryText} text-sm ${
 								selection.deviceId === camera.deviceId
 									? glassStyles.selected
@@ -246,7 +243,7 @@ export function WebcamDropdown({
 										<VideoCameraIcon className="w-3 h-3" />
 									)
 								}
-								onClick={handleVideoToggle}
+								onClick={toggleVideo}
 							>
 								{selection.videoEnabled ? "Turn Off" : "Turn On"}
 							</MenuItem>
