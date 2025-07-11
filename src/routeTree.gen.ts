@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TestRouteImport } from './routes/test'
 import { Route as SwingRouteImport } from './routes/swing'
 import { Route as PlayerRouteImport } from './routes/player'
+import { Route as JotaiRouteImport } from './routes/jotai'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TestRoute = TestRouteImport.update({
@@ -29,6 +30,11 @@ const PlayerRoute = PlayerRouteImport.update({
   path: '/player',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JotaiRoute = JotaiRouteImport.update({
+  id: '/jotai',
+  path: '/jotai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -37,12 +43,14 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/jotai': typeof JotaiRoute
   '/player': typeof PlayerRoute
   '/swing': typeof SwingRoute
   '/test': typeof TestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/jotai': typeof JotaiRoute
   '/player': typeof PlayerRoute
   '/swing': typeof SwingRoute
   '/test': typeof TestRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/jotai': typeof JotaiRoute
   '/player': typeof PlayerRoute
   '/swing': typeof SwingRoute
   '/test': typeof TestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/player' | '/swing' | '/test'
+  fullPaths: '/' | '/jotai' | '/player' | '/swing' | '/test'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/player' | '/swing' | '/test'
-  id: '__root__' | '/' | '/player' | '/swing' | '/test'
+  to: '/' | '/jotai' | '/player' | '/swing' | '/test'
+  id: '__root__' | '/' | '/jotai' | '/player' | '/swing' | '/test'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  JotaiRoute: typeof JotaiRoute
   PlayerRoute: typeof PlayerRoute
   SwingRoute: typeof SwingRoute
   TestRoute: typeof TestRoute
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/jotai': {
+      id: '/jotai'
+      path: '/jotai'
+      fullPath: '/jotai'
+      preLoaderRoute: typeof JotaiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  JotaiRoute: JotaiRoute,
   PlayerRoute: PlayerRoute,
   SwingRoute: SwingRoute,
   TestRoute: TestRoute,

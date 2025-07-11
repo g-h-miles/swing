@@ -47,6 +47,18 @@ export const isPlayingAllReplaysAtom = atomWithStorage(
 	false,
 );
 
+const playingIdsStorage = createJSONStorage<string[]>(() => localStorage);
+
+const playingReplayIdsAtom = atomWithStorage<string[]>(
+	"playing-replay-ids",
+	[],
+	playingIdsStorage,
+);
+
+export const shouldPlayReplayAtomFamily = atomFamily((replayId: string) =>
+	atom((get) => get(playingReplayIdsAtom).includes(replayId)),
+);
+
 const replayStateBaseAtomFamily = atomFamily((replayId: string) =>
 	atom<ReplayPlayerState>({
 		id: replayId,
@@ -62,23 +74,12 @@ const replayStateBaseAtomFamily = atomFamily((replayId: string) =>
 export const replayStateAtomFamily = atomFamily((replayId: string) =>
 	atom(
 		(get) => {
-			const base = get(replayStateBaseAtomFamily(replayId));
-
-			// Only use derived state if we're still in mounting state
-			if (base.state === "mounting") {
-				const playingIds = get(playingReplayIdsAtom);
-				const initialState: ReplayState = playingIds.includes(replayId)
-					? "playing"
-					: "mounting";
-
-				return {
-					...base,
-					state: initialState,
-				};
-			}
-
-			// If not mounting, return the actual stored state
-			return base;
+			const isPlaying = get(playingReplayIdsAtom).includes(replayId);
+			const currentState = get(replayStateBaseAtomFamily(replayId));
+			return {
+				...currentState,
+				state: isPlaying ? "playing" : currentState.state,
+			};
 		},
 		(_get, set, newValue: ReplayPlayerState) => {
 			set(replayStateBaseAtomFamily(replayId), newValue);
@@ -86,7 +87,7 @@ export const replayStateAtomFamily = atomFamily((replayId: string) =>
 	),
 );
 
-export const replayDataAtomFamily = atomFamily((replayId: string) =>
+const replayDataAtomFamily = atomFamily((replayId: string) =>
 	atom((get) => {
 		const replaysQuery = get(replaysQueryAtom);
 		if (replaysQuery.status === "success") {
@@ -116,86 +117,68 @@ export const replayAtomFamily = atomFamily((replayId: string) =>
 	),
 );
 
-export const getReplayStateAtomFamily = atomFamily((replayId: string) =>
-	atom((get) => {
-		const replay = get(replayAtomFamily(replayId));
-		const { data, ...state } = replay;
-		return state;
-	}),
+export const readReplayStateAtomFamily = atomFamily((replayId: string) =>
+	atom((get) => get(replayStateAtomFamily(replayId)).state),
 );
 
-// Get just the URL from the data
-export const getReplayUrlAtomFamily = atomFamily((replayId: string) =>
-	atom((get) => {
-		const replay = get(replayAtomFamily(replayId));
-		return replay.data?.url || null;
-	}),
-);
-
-export const setPlayerStateAtomFamily = atomFamily((replayId: string) =>
-	atom(null, (get, set, newState: ReplayState) => {
-		const current = get(replayStateAtomFamily(replayId));
-		if (current.state === newState) return;
-
-		// Update individual state
+export const writeReplayStateAtomFamily = atomFamily((replayId: string) =>
+	atom(null, (_get, set, newValue: ReplayState) => {
+		const current = _get(replayStateAtomFamily(replayId));
 		set(replayStateAtomFamily(replayId), {
 			...current,
-			state: newState,
+			state: newValue,
 		});
-
-		// Update the Set - SINGLE SOURCE OF TRUTH
-		const currentPlaying = get(playingReplayIdsAtom);
-		const newPlaying = new Set(currentPlaying);
-
-		const shouldBePlaying = get(isReplayPlayingAtomFamily(replayId));
-
-		if (newState === "playing" || shouldBePlaying) {
-			set(isPlayingAllReplaysAtom, true);
-			newPlaying.add(replayId);
-		} else {
-			newPlaying.delete(replayId);
-		}
-
-		set(playingReplayIdsAtom, Array.from(newPlaying));
 	}),
 );
 
-// Simplify play/pause atoms - they just call setPlayerState
-export const playReplayAtomFamily = atomFamily((replayId: string) =>
+export const readReplayPlayerURLAtomFamily = atomFamily((replayId: string) =>
+	atom((get) => get(replayAtomFamily(replayId)).data?.url),
+);
+
+export const onPlayReplayAtomFamily = atomFamily((replayId: string) =>
 	atom(null, (_get, set) => {
-		set(setPlayerStateAtomFamily(replayId), "playing");
-	}),
-);
-
-export const pauseReplayAtomFamily = atomFamily((replayId: string) =>
-	atom(null, (_get, set) => {
-		set(setPlayerStateAtomFamily(replayId), "paused");
-	}),
-);
-
-const storage = createJSONStorage<string[]>(() => localStorage);
-export const playingReplayIdsAtom = atomWithStorage<string[]>(
-	"playing-replay-ids",
-	[],
-	storage,
-);
-
-export const isReplayPlayingAtomFamily = atomFamily((replayId: string) =>
-	atom(
-		(get) => get(playingReplayIdsAtom).includes(replayId),
-		(get, set, isPlaying: boolean) => {
-			const currentPlaying = get(playingReplayIdsAtom);
-			const newPlaying = new Set(currentPlaying);
-
-			if (isPlaying) {
-				newPlaying.add(replayId);
-			} else {
-				newPlaying.delete(replayId);
+		const currentState = _get(replayStateAtomFamily(replayId));
+		if (currentState.state !== "playing") {
+			const currentPlayingIds = _get(playingReplayIdsAtom);
+			if (!currentPlayingIds.includes(replayId)) {
+				set(playingReplayIdsAtom, [...currentPlayingIds, replayId]);
 			}
+			set(replayStateAtomFamily(replayId), {
+				...currentState,
+				state: "playing",
+			});
+		}
+	}),
+);
 
-			set(playingReplayIdsAtom, Array.from(newPlaying));
-		},
-	),
+export const onPauseReplayAtomFamily = atomFamily((replayId: string) =>
+	atom(null, (_get, set) => {
+		const currentState = _get(replayStateAtomFamily(replayId));
+		if (currentState.state !== "paused") {
+			const currentPlayingIds = _get(playingReplayIdsAtom);
+			set(
+				playingReplayIdsAtom,
+				currentPlayingIds.filter((id) => id !== replayId),
+			);
+			set(replayStateAtomFamily(replayId), {
+				...currentState,
+				state: "paused",
+			});
+		}
+		set(isPlayingAllReplaysAtom, false);
+	}),
+);
+
+export const onLoadedMetadataReplayAtomFamily = atomFamily((replayId: string) =>
+	atom(null, (_get, set) => {
+		const currentState = _get(replayStateAtomFamily(replayId));
+		if (currentState.state === "mounting") {
+			set(replayStateAtomFamily(replayId), {
+				...currentState,
+				state: "paused",
+			});
+		}
+	}),
 );
 
 export const togglePlayAllAtom = atom(null, (get, set) => {
@@ -209,14 +192,14 @@ export const togglePlayAllAtom = atom(null, (get, set) => {
 
 		// Pause all - call individual pause atoms
 		replaysQuery.data.forEach((replay) => {
-			const pauseAtom = pauseReplayAtomFamily(replay.id);
+			const pauseAtom = onPauseReplayAtomFamily(replay.id);
 			set(pauseAtom);
 		});
 		set(isPlayingAllReplaysAtom, false);
 	} else {
 		// Play all - call individual play atoms
 		replaysQuery.data.forEach((replay) => {
-			const playAtom = playReplayAtomFamily(replay.id);
+			const playAtom = onPlayReplayAtomFamily(replay.id);
 			set(playAtom);
 		});
 		set(isPlayingAllReplaysAtom, true);
