@@ -1,5 +1,9 @@
-import { atom } from "jotai";
+import { atom, useAtomValue } from "jotai";
+import { atomWithQuery } from "jotai-tanstack-query";
 import { atomFamily, atomWithStorage } from "jotai/utils";
+import { cameraPermissionQueryOptions } from "@/lib/hooks/use-permission";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 type WebcamSimple = {
 	deviceId: string | null;
@@ -33,3 +37,27 @@ export const toggleVideoEnabledAtom = atomFamily((key: string) => {
 		}));
 	});
 });
+
+
+const permissionsQueryAtom = atomWithQuery(() => cameraPermissionQueryOptions)
+
+export const useCameraPermissionValue = () => {
+	const { data: permissionValue, isLoading, isError, refetch} = useAtomValue(permissionsQueryAtom);
+
+	useEffect(() => {
+		if (!permissionValue) return;
+		
+		const handlePermissionChange = async () => {
+				await refetch();
+			}
+
+		permissionValue.addEventListener("change", handlePermissionChange);
+		return () => {
+			permissionValue.removeEventListener("change", handlePermissionChange);
+		};
+		
+	}, [permissionValue, refetch]);
+
+	return { permissionValue, isLoading, isError };
+
+}

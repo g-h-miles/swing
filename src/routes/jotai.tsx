@@ -39,6 +39,9 @@ const ReplayPlayer = () => {
 		if (videoRef.current && shouldPlayAtom) {
 			videoRef.current.play();
 		}
+		else if (videoRef.current) {
+			videoRef.current.pause();
+		}
 	}, [shouldPlayAtom]);
 
 	return (

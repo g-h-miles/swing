@@ -15,7 +15,7 @@ import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
 import type React from "react";
 import { useCallback, useState } from "react";
 
-import { useWebcamStore } from "@/lib/stores/webcam-store";
+
 
 import {
 	readWebcamAtom,
@@ -23,7 +23,6 @@ import {
 	toggleVideoEnabledAtom,
 } from "@/lib/stores/webcam-atom";
 import { useAtomValue, useSetAtom } from "jotai";
-import { ScopeProvider } from "jotai-scope";
 
 import {
 	CameraIcon,

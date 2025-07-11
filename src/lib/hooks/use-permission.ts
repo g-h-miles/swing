@@ -8,10 +8,9 @@ const getPermission = async (name: PermissionName) => {
 	return permission;
 };
 
-export function useCameraPermissionQuery() {
-	const queryClient = useQueryClient();
 
-	const query = useQuery({
+
+export const cameraPermissionQueryOptions = {
 		queryKey: ["camera-permission"],
 		queryFn: () => getPermission("camera" as PermissionName),
 		retry: 1,
@@ -19,7 +18,13 @@ export function useCameraPermissionQuery() {
 		refetchOnWindowFocus: true,
 		refetchOnMount: true,
 		staleTime: 0,
-	});
+	}
+
+
+export function useCameraPermissionQuery() {
+	const queryClient = useQueryClient();
+
+	const query = useQuery(cameraPermissionQueryOptions);
 
 	useEffect(() => {
 		if (query.data) {
