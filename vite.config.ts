@@ -11,8 +11,8 @@ export default defineConfig({
       target: 'react',
       autoCodeSplitting: true,
     }),viteReact({
-      babel: {
-        plugins: [["babel-plugin-react-compiler", {target: "19"}]]
-      }
+      // babel: {
+      //   plugins: [["babel-plugin-react-compiler", {target: "19"}]]
+      // }
     }), tailwindcss(), mkcert(), tsconfigPaths()],
 });

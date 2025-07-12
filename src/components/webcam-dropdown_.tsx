@@ -15,7 +15,10 @@ import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
 import type React from "react";
 import { useCallback, useState } from "react";
 
-
+import {
+	readRequestPermissionStatusAtom,
+	requestPermissionAtom,
+} from "@/lib/stores/webcam-atom";
 
 import {
 	readWebcamAtom,
@@ -79,20 +82,21 @@ export function WebcamDropdown({
 		refetch: refetchWebcams,
 	} = useAvailableWebcamsQuery();
 
-	const [requestPermissionStatus, setRequestPermissionStatus] =
-		useState<RequestPermissionStatus>("idle");
+	const requestPermissionStatus = useAtomValue(readRequestPermissionStatusAtom);
 
-	const handleRequestPermission = useCallback(async () => {
-		setRequestPermissionStatus("loading");
-		try {
-			await requestCameraAndMicrophoneStream();
-			await refetchWebcams();
-			setRequestPermissionStatus("success");
-		} catch (error) {
-			console.log("Permission request failed:", error);
-			setRequestPermissionStatus("error");
-		}
-	}, [refetchWebcams]);
+	const handleRequestPermission = useSetAtom(requestPermissionAtom);
+
+	// const handleRequestPermission = useCallback(async () => {
+	// 	setRequestPermissionStatus("loading");
+	// 	try {
+	// 		await requestCameraAndMicrophoneStream();
+	// 		await refetchWebcams();
+	// 		setRequestPermissionStatus("success");
+	// 	} catch (error) {
+	// 		console.log("Permission request failed:", error);
+	// 		setRequestPermissionStatus("error");
+	// 	}
+	// }, [refetchWebcams]);
 
 	if (!selection) {
 		return (

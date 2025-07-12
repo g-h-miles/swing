@@ -1,8 +1,9 @@
+import { cameraPermissionQueryOptions } from "@/lib/hooks/use-permission";
+import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
+import { useQueryClient } from "@tanstack/react-query";
 import { atom, useAtomValue } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { atomFamily, atomWithStorage } from "jotai/utils";
-import { cameraPermissionQueryOptions } from "@/lib/hooks/use-permission";
-import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 type WebcamSimple = {
@@ -38,26 +39,53 @@ export const toggleVideoEnabledAtom = atomFamily((key: string) => {
 	});
 });
 
-
-const permissionsQueryAtom = atomWithQuery(() => cameraPermissionQueryOptions)
+const permissionsQueryAtom = atomWithQuery(() => cameraPermissionQueryOptions);
 
 export const useCameraPermissionValue = () => {
-	const { data: permissionValue, isLoading, isError, refetch} = useAtomValue(permissionsQueryAtom);
+	const {
+		data: permissionValue,
+		isLoading,
+		isError,
+		refetch,
+	} = useAtomValue(permissionsQueryAtom);
 
 	useEffect(() => {
 		if (!permissionValue) return;
-		
+
 		const handlePermissionChange = async () => {
-				await refetch();
-			}
+			await refetch();
+		};
 
 		permissionValue.addEventListener("change", handlePermissionChange);
 		return () => {
 			permissionValue.removeEventListener("change", handlePermissionChange);
 		};
-		
 	}, [permissionValue, refetch]);
 
 	return { permissionValue, isLoading, isError };
+};
 
-}
+type RequestPermissionStatus = "idle" | "loading" | "error" | "success";
+const requestPermissionStatusAtom = atom<RequestPermissionStatus>("idle");
+
+export const readRequestPermissionStatusAtom = atom((get) =>
+	get(requestPermissionStatusAtom),
+);
+
+export const setRequestPermissionStatusAtom = atom(
+	null,
+	(_get, set, status: RequestPermissionStatus) => {
+		set(requestPermissionStatusAtom, status);
+	},
+);
+
+export const requestPermissionAtom = atom(null, async (_get, set) => {
+	set(setRequestPermissionStatusAtom, "loading");
+
+	try {
+		await requestCameraAndMicrophoneStream();
+		set(setRequestPermissionStatusAtom, "success");
+	} catch (error) {
+		set(setRequestPermissionStatusAtom, "error");
+	}
+});
