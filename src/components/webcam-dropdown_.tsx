@@ -9,16 +9,14 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { glassStyles } from "@/glass";
-import { useAvailableWebcamsQuery } from "@/lib/hooks/use-available-webcams";
-import { useCameraPermissionQuery } from "@/lib/hooks/use-permission";
-import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
-import type React from "react";
-import { useCallback, useState } from "react";
-
 import {
-	readRequestPermissionStatusAtom,
-	requestPermissionAtom,
-} from "@/lib/stores/webcam-atom";
+	availableWebcamsAtom,
+	readAvailableWebcamsLengthAtom,
+} from "@/lib/stores/available-webcams-atom";
+
+import type React from "react";
+
+import { requestPermissionAtom } from "@/lib/stores/webcam-atom";
 
 import {
 	readWebcamAtom,
@@ -35,6 +33,8 @@ import {
 	VideoCameraSlashIcon,
 	WarningCircleIcon,
 } from "@phosphor-icons/react";
+
+import { readAllowedWebcamsStateAtom } from "@/lib/stores/allowed-webcams";
 
 interface MenuItemProps {
 	icon: React.ReactNode;
@@ -58,8 +58,6 @@ const MenuItem = ({
 	</DropdownMenuItem>
 );
 
-type RequestPermissionStatus = "idle" | "loading" | "error" | "success";
-
 export function WebcamDropdown({
 	panelId,
 }: {
@@ -68,35 +66,9 @@ export function WebcamDropdown({
 	const selection = useAtomValue(readWebcamAtom(panelId));
 	const setDeviceId = useSetAtom(setDeviceIdAtom(panelId));
 	const toggleVideo = useSetAtom(toggleVideoEnabledAtom(panelId));
-
-	const {
-		data: cameraPermission,
-		isLoading: isCameraLoading,
-		isError: isCameraError,
-	} = useCameraPermissionQuery();
-
-	const {
-		data: webcams,
-		isLoading: isWebcamsLoading,
-		isError: isWebcamsError,
-		refetch: refetchWebcams,
-	} = useAvailableWebcamsQuery();
-
-	const requestPermissionStatus = useAtomValue(readRequestPermissionStatusAtom);
-
-	const handleRequestPermission = useSetAtom(requestPermissionAtom);
-
-	// const handleRequestPermission = useCallback(async () => {
-	// 	setRequestPermissionStatus("loading");
-	// 	try {
-	// 		await requestCameraAndMicrophoneStream();
-	// 		await refetchWebcams();
-	// 		setRequestPermissionStatus("success");
-	// 	} catch (error) {
-	// 		console.log("Permission request failed:", error);
-	// 		setRequestPermissionStatus("error");
-	// 	}
-	// }, [refetchWebcams]);
+	const { devices: availableWebcams_ } = useAtomValue(availableWebcamsAtom);
+	const availableWebcamsLength = useAtomValue(readAvailableWebcamsLengthAtom);
+	const allowedWebcamsState = useAtomValue(readAllowedWebcamsStateAtom);
 
 	if (!selection) {
 		return (
@@ -111,30 +83,10 @@ export function WebcamDropdown({
 		);
 	}
 
-	const getButtonIcon = () => {
-		if (
-			isCameraLoading ||
-			isWebcamsLoading ||
-			requestPermissionStatus === "loading"
-		) {
-			return <SpinnerGapIcon className="w-4 h-4 animate-spin" />;
-		}
-		if (
-			isCameraError ||
-			isWebcamsError ||
-			requestPermissionStatus === "error"
-		) {
-			return <WarningCircleIcon className="w-4 h-4 text-red-400" />;
-		}
-		if (cameraPermission?.state === "granted") {
-			return <VideoCameraIcon className="w-4 h-4" />;
-		}
-
-		return <VideoCameraSlashIcon className="w-4 h-4" />;
-	};
-
 	const getCameraLabel = (cameraId: string) => {
-		const camera = webcams?.find((camera) => camera.deviceId === cameraId);
+		const camera = availableWebcams_.find(
+			(camera) => camera.deviceId === cameraId,
+		);
 		if (!camera) {
 			return;
 		}
@@ -146,43 +98,8 @@ export function WebcamDropdown({
 		);
 	};
 
-	const getStatusMessage = () => {
-		if (
-			isCameraLoading ||
-			isWebcamsLoading ||
-			requestPermissionStatus === "loading"
-		) {
-			return "Loading camera permissions...";
-		}
-		if (
-			isCameraError ||
-			isWebcamsError ||
-			requestPermissionStatus === "error"
-		) {
-			return "Permission denied. Check browser camera settings.";
-		}
-		if (cameraPermission?.state === "denied") {
-			return "Camera blocked. Check browser camera settings.";
-		}
-		return "Click to allow camera access";
-	};
-
-	const isPermissionGranted = cameraPermission?.state === "granted";
-	const isStillLoading = isCameraLoading || isWebcamsLoading;
-	const hasError = isCameraError || isWebcamsError;
-
-	if (!isPermissionGranted || isStillLoading || hasError) {
-		return (
-			<Button
-				variant="ghost"
-				className={`w-10 h-10 p-0 cursor-pointer ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
-				disabled={isStillLoading}
-				onClick={handleRequestPermission}
-				title={getStatusMessage()}
-			>
-				{getButtonIcon()}
-			</Button>
-		);
+	if (allowedWebcamsState !== "granted") {
+		return <PermissionButton />;
 	}
 
 	return (
@@ -206,13 +123,13 @@ export function WebcamDropdown({
 				avoidCollisions={false}
 			>
 				<div className="p-1">
-					{!webcams?.length && (
+					{availableWebcamsLength === 0 && (
 						<div className="px-2 py-1.5 text-xs text-white/50">
 							No cameras available
 						</div>
 					)}
 
-					{webcams?.map((camera) => (
+					{availableWebcams_.map((camera) => (
 						<DropdownMenuItem
 							key={camera.deviceId}
 							onClick={() => setDeviceId(camera.deviceId)}
@@ -234,7 +151,7 @@ export function WebcamDropdown({
 						</DropdownMenuItem>
 					))}
 
-					{webcams?.length && (
+					{availableWebcamsLength > 0 && (
 						<>
 							<DropdownMenuSeparator className={`my-1 ${glassStyles.border}`} />
 
@@ -261,3 +178,47 @@ export function WebcamDropdown({
 		</DropdownMenu>
 	);
 }
+
+export const PermissionButton = () => {
+	const allowedWebcamsState = useAtomValue(readAllowedWebcamsStateAtom);
+	const handleRequestPermission = useSetAtom(requestPermissionAtom);
+
+	const getButtonIcon = () => {
+		if (allowedWebcamsState === "loading") {
+			return <SpinnerGapIcon className="w-4 h-4 animate-spin" />;
+		}
+		if (allowedWebcamsState === "error") {
+			return <WarningCircleIcon className="w-4 h-4 text-red-400" />;
+		}
+		if (allowedWebcamsState === "granted") {
+			return <VideoCameraIcon className="w-4 h-4" />;
+		}
+
+		return <VideoCameraSlashIcon className="w-4 h-4" />;
+	};
+
+	const getStatusMessage = () => {
+		if (allowedWebcamsState === "loading") {
+			return "Loading camera permissions...";
+		}
+		if (allowedWebcamsState === "error") {
+			return "Permission denied. Check browser camera settings.";
+		}
+		if (allowedWebcamsState === "denied") {
+			return "Camera blocked. Check browser camera settings.";
+		}
+		return "Click to allow camera access";
+	};
+
+	return (
+		<Button
+			variant="ghost"
+			className={`w-10 h-10 p-0 cursor-pointer ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
+			disabled={allowedWebcamsState === "loading"}
+			onClick={handleRequestPermission}
+			title={getStatusMessage()}
+		>
+			{getButtonIcon()}
+		</Button>
+	);
+};

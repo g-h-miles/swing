@@ -1,82 +1,54 @@
-import { MediaPlayer, MediaPlayerVideo } from "@/components/ui/media-player";
+import { Button } from "@/components/ui/button";
 import {
-	onLoadedMetadataReplayAtomFamily,
-	onPauseReplayAtomFamily,
-	onPlayReplayAtomFamily,
-	readReplayStateAtomFamily,
-	shouldPlayReplayAtomFamily,
-	writeReplayStateAtomFamily,
-} from "@/lib/stores/replay-atom";
+	PermissionButton,
+	WebcamDropdown,
+} from "@/components/webcam-dropdown_";
+import { readAllowedWebcamsStateAtom } from "@/lib/stores/allowed-webcams";
+import { atomStore } from "@/lib/stores/atom-store";
+import {
+	availableWebcamsAtom,
+	readAvailableWebcamsAtom,
+	readAvailableWebcamsLengthAtom,
+} from "@/lib/stores/available-webcams-atom";
+import {
+	readWebcamAtom,
+	setDeviceIdAtom,
+	toggleVideoEnabledAtom,
+} from "@/lib/stores/webcam-atom";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/jotai")({
 	component: RouteComponent,
 });
 
+const unsub = atomStore.sub(readAvailableWebcamsAtom, () => {
+	console.log(
+		"readAvailableWebcamsAtom changed to:",
+		atomStore.get(readAvailableWebcamsAtom),
+	);
+});
+
 function RouteComponent() {
+	const panelId = "2";
+	const selection = useAtomValue(readWebcamAtom(panelId));
+	const setDeviceId = useSetAtom(setDeviceIdAtom(panelId));
+	const toggleVideo = useSetAtom(toggleVideoEnabledAtom(panelId));
+	const availableWebcams = useAtomValue(readAvailableWebcamsAtom);
+	useEffect(() => {
+		return () => {
+			unsub();
+		};
+	}, []);
+
+	// const availableWebcamsLength = useAtomValue(readAvailableWebcamsLengthAtom);
+	// const allowedWebcamsState = useAtomValue(readAllowedWebcamsStateAtom);
 	return (
 		<div className="flex flex-col gap-4 w-4/5">
-			<div>Hello "/jotai"!</div>
-			<div className="text-red-500">I am a route component</div>
-			<ReplayPlayerState />
-			<ReplayPlayer />
+			{/* <pre>{JSON.stringify(availableWebcams, null, 2)}</pre> */}
+			{/* <PermissionButton /> */}
+			<WebcamDropdown panelId="1" />
 		</div>
 	);
 }
-
-const ReplayPlayer = () => {
-	const onPlayAtom = useSetAtom(onPlayReplayAtomFamily("replay-1"));
-	const onPauseAtom = useSetAtom(onPauseReplayAtomFamily("replay-1"));
-	const onLoadedMetadataAtom = useSetAtom(
-		onLoadedMetadataReplayAtomFamily("replay-1"),
-	);
-	const shouldPlayAtom = useAtomValue(shouldPlayReplayAtomFamily("replay-1"));
-	const setReplayStateAtom = useSetAtom(writeReplayStateAtomFamily("replay-1"));
-	const videoRef = useRef<HTMLVideoElement>(null);
-	useEffect(() => {
-		if (videoRef.current && shouldPlayAtom) {
-			videoRef.current.play();
-		}
-		else if (videoRef.current) {
-			videoRef.current.pause();
-		}
-	}, [shouldPlayAtom]);
-
-	return (
-		<div>
-			<div>ReplayPlayer</div>
-			<MediaPlayer className="w-full  rounded-sm border-0">
-				<MediaPlayerVideo
-					muted
-					loop
-					// autoPlay={true}
-					ref={videoRef}
-					preload="metadata"
-					onPlay={() => onPlayAtom()}
-					onPause={() => onPauseAtom()}
-					onEnded={() => setReplayStateAtom("ended")}
-					onError={() => setReplayStateAtom("error")}
-					onLoadStart={() => setReplayStateAtom("loading")}
-					onCanPlay={() => setReplayStateAtom("paused")}
-					onLoadedMetadata={() => onLoadedMetadataAtom()}
-				>
-					<source
-						src={"https://www.diceui.com/assets/cloud.mp4"}
-						type="video/mp4"
-					/>
-				</MediaPlayerVideo>
-			</MediaPlayer>
-		</div>
-	);
-};
-
-const ReplayPlayerState = () => {
-	const replayState = useAtomValue(readReplayStateAtomFamily("replay-1"));
-	return (
-		<div>
-			<div>ReplayPlayerState: {JSON.stringify(replayState)}</div>
-		</div>
-	);
-};

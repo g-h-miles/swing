@@ -5,6 +5,7 @@ import { atom, useAtomValue } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { atomFamily, atomWithStorage } from "jotai/utils";
 import { useEffect } from "react";
+import { atomWithListeners } from "./atom-helpers";
 
 type WebcamSimple = {
 	deviceId: string | null;
@@ -64,6 +65,16 @@ export const useCameraPermissionValue = () => {
 
 	return { permissionValue, isLoading, isError };
 };
+
+export const readPermissionValueAtom = atom(
+	(get) => get(permissionsQueryAtom).data,
+);
+export const readPermissionIsLoadingAtom = atom(
+	(get) => get(permissionsQueryAtom).isLoading,
+);
+export const readPermissionIsErrorAtom = atom(
+	(get) => get(permissionsQueryAtom).isError,
+);
 
 type RequestPermissionStatus = "idle" | "loading" | "error" | "success";
 const requestPermissionStatusAtom = atom<RequestPermissionStatus>("idle");
