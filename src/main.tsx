@@ -11,9 +11,6 @@ import reportWebVitals from "./reportWebVitals.ts";
 import { scan } from "react-scan";
 import { routeTree } from "./routeTree.gen";
 
-import { Provider as JotaiProvider } from "jotai";
-import { atomStore } from "./lib/stores/atom-store.ts";
-
 scan({
 	enabled: true,
 });

@@ -1,7 +1,5 @@
-import { type SetStateAction, atom } from "jotai";
+import { atom } from "jotai";
 import { atomFamily } from "jotai/utils";
-import { atomStore } from "./atom-store";
-import { availableWebcamsAtom } from "./available-webcams-atom";
 
 export interface PermissionState {
 	state: PermissionStatus["state"] | "prompt" | "mounting";

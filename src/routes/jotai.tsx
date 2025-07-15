@@ -45,7 +45,7 @@ function RouteComponent() {
 	// const availableWebcamsLength = useAtomValue(readAvailableWebcamsLengthAtom);
 	// const allowedWebcamsState = useAtomValue(readAllowedWebcamsStateAtom);
 	return (
-		<div className="flex flex-col gap-4 w-4/5">
+		<div className="flex flex-col gap-4 w-4/5 items-center ">
 			{/* <pre>{JSON.stringify(availableWebcams, null, 2)}</pre> */}
 			{/* <PermissionButton /> */}
 			<WebcamDropdown panelId="1" />

@@ -26,6 +26,7 @@ baseAvailableWebcamsAtom.onMount = (setAtom) => {
 	let init: symbol | null = INIT;
 
 	const refresh = async () => {
+		console.log("refreshing webcams");
 		setAtom((prev) => ({ ...prev, isLoading: true }));
 
 		try {
@@ -36,6 +37,7 @@ baseAvailableWebcamsAtom.onMount = (setAtom) => {
 				isLoading: false,
 				error: null,
 			});
+			console.log("webcams refreshed");
 		} catch (error) {
 			setAtom({
 				devices: [],
@@ -49,18 +51,16 @@ baseAvailableWebcamsAtom.onMount = (setAtom) => {
 		console.log("Permission state changed to:", currentState);
 
 		if (init === INIT) {
-			console.log("first time, skipping");
+			if (currentState === "granted") {
+				console.log("permission granted, refreshing webcams");
+				refresh();
+			}
 			init = null;
 			return;
 		}
 		console.log("refreshing webcams");
 		refresh();
 	});
-
-	const permissionState = atomStore.get(readCameraPermissionAtom);
-	if (permissionState === "granted") {
-		refresh();
-	}
 
 	navigator.mediaDevices.addEventListener("devicechange", refresh);
 
@@ -70,39 +70,9 @@ baseAvailableWebcamsAtom.onMount = (setAtom) => {
 	};
 };
 
-const refreshWebcamsAtom = atom(null, async (_get, set) => {
-	// set(baseAvailableWebcamsAtom, (prev) => ({ ...prev, isLoading: true }));
-
-	try {
-		const devices = await navigator.mediaDevices.enumerateDevices();
-		const webcams = devices.filter((device) => device.kind === "videoinput");
-		set(baseAvailableWebcamsAtom, {
-			devices: webcams,
-			isLoading: false,
-			error: null,
-		});
-	} catch (error) {
-		set(baseAvailableWebcamsAtom, {
-			devices: [],
-			isLoading: false,
-			error: error instanceof Error ? error.message : "Unknown error",
-		});
-	}
-});
-
 export const availableWebcamsAtom = atom((get) =>
 	get(baseAvailableWebcamsAtom),
 );
-export { refreshWebcamsAtom };
-
-// baseAvailableWebcamsAtom.onMount = () => {
-// 	atomStore.sub(baseAvailableWebcamsAtom, () => {
-// 		console.log(
-// 			"baseAvailableWebcamsAtom changed to:",
-// 			atomStore.get(baseAvailableWebcamsAtom),
-// 		);
-// 	});
-// };
 
 export const readAvailableWebcamsAtom = atom(
 	(get) => get(availableWebcamsAtom).devices,
