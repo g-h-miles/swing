@@ -5,6 +5,7 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
+/** @public */
 export const safeJsonParse = <T>(str: string) => {
 	try {
 		const jsonValue: T = JSON.parse(str);

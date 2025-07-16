@@ -1,5 +1,6 @@
 import { atom } from "jotai";
 import { atomFamily } from "jotai/utils";
+import { requestCameraAndMicrophoneStream } from "../webcams";
 
 export interface PermissionState {
 	state: PermissionStatus["state"] | "prompt" | "mounting";
@@ -7,7 +8,7 @@ export interface PermissionState {
 	error: string | null;
 }
 
-const INIT = Symbol("init");
+// const INIT = Symbol("init");
 
 const initialPermissionState: PermissionState = {
 	state: "mounting",
@@ -15,8 +16,8 @@ const initialPermissionState: PermissionState = {
 	error: null,
 };
 
-export const permissionAtomFamily = atomFamily((name: PermissionName) => {
-	let init: symbol | null = INIT;
+const permissionAtomFamily = atomFamily((name: PermissionName) => {
+	// let init: symbol | null = INIT;
 	const anAtom = atom<PermissionState>(initialPermissionState);
 
 	anAtom.onMount = (setAtom) => {
@@ -40,10 +41,12 @@ export const permissionAtomFamily = atomFamily((name: PermissionName) => {
 					error: null,
 				});
 				permissionStatus.onchange = () => {
-					if (init === INIT) {
-						init = null;
-						return;
-					}
+					// console.log("first mount");
+
+					// if (init === INIT) {
+					// 	init = null;
+					// 	return;
+					// }
 					console.log("permissionStatus changed");
 					if (!permissionStatus) return;
 					setAtom({
@@ -76,7 +79,7 @@ export const permissionAtomFamily = atomFamily((name: PermissionName) => {
 	return anAtom;
 });
 
-export const cameraPermissionAtom = permissionAtomFamily("camera");
+const cameraPermissionAtom = permissionAtomFamily("camera" as PermissionName);
 
 export const readCameraPermissionAtom = atom(
 	(get) => get(cameraPermissionAtom).state,
@@ -93,3 +96,28 @@ export const readCameraPermissionIsLoadingAtom = atom(
 export const readCameraPermissionErrorAtom = atom(
 	(get) => get(cameraPermissionAtom).error,
 );
+
+type RequestPermissionStatus = "idle" | "loading" | "error" | "success";
+const requestPermissionStatusAtom = atom<RequestPermissionStatus>("idle");
+
+export const readRequestPermissionStatusAtom = atom((get) =>
+	get(requestPermissionStatusAtom),
+);
+
+const setRequestPermissionStatusAtom = atom(
+	null,
+	(_get, set, status: RequestPermissionStatus) => {
+		set(requestPermissionStatusAtom, status);
+	},
+);
+
+export const requestPermissionAtom = atom(null, async (_get, set) => {
+	set(setRequestPermissionStatusAtom, "loading");
+
+	try {
+		await requestCameraAndMicrophoneStream();
+		set(setRequestPermissionStatusAtom, "success");
+	} catch (error) {
+		set(setRequestPermissionStatusAtom, "error");
+	}
+});

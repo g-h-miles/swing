@@ -1,12 +1,7 @@
-import { atom, useAtom, useAtomValue } from "jotai";
-import { atomWithRefresh } from "jotai/utils";
-import { useEffect } from "react";
+import { atom } from "jotai";
 
 import { atomStore } from "./atom-store";
-import {
-	cameraPermissionAtom,
-	readCameraPermissionAtom,
-} from "./permission-atom";
+import { readCameraPermissionAtom } from "./permission-atom";
 
 interface WebcamsState {
 	devices: MediaDeviceInfo[];
@@ -73,7 +68,7 @@ baseAvailableWebcamsAtom.onMount = (setAtom) => {
 export const availableWebcamsAtom = atom((get) =>
 	get(baseAvailableWebcamsAtom),
 );
-
+/** @public */
 export const readAvailableWebcamsAtom = atom(
 	(get) => get(availableWebcamsAtom).devices,
 );

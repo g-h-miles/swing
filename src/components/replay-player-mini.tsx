@@ -1,53 +1,46 @@
 // components/replay-player-mini.tsx
 import { MediaPlayer, MediaPlayerVideo } from "@/components/ui/media-player";
-import { useReplays } from "@/lib/hooks/use-replays";
-import { useReplayStore } from "@/lib/stores/replay-store";
-import { useCallback, useEffect, useRef } from "react";
+import {
+	onLoadedMetadataReplayAtomFamily,
+	onPauseReplayAtomFamily,
+	onPlayReplayAtomFamily,
+	readReplayPlayerURLAtomFamily,
+	shouldPlayReplayAtomFamily,
+	writeReplayStateAtomFamily,
+} from "@/lib/stores/replay-atom";
+import { useAtomValue, useSetAtom } from "jotai";
+import { useEffect, useRef } from "react";
 import { Skeleton } from "./ui/skeleton";
-
-export interface ReplayPlayerHandles {
-	play: () => void;
-	pause: () => void;
-	state: string;
-	rate: number;
-	volume: number;
-}
-
-export interface ReplayPlayerMiniProps {
-	replayId: string;
-	autoPlay?: boolean;
-}
 
 export const ReplayPlayerMini = ({
 	replayId,
-	autoPlay = false,
-}: ReplayPlayerMiniProps) => {
+}: {
+	replayId: string;
+}) => {
+	const onPlayAtom = useSetAtom(onPlayReplayAtomFamily(replayId));
+
+	const onPauseAtom = useSetAtom(onPauseReplayAtomFamily(replayId));
+
+	const onLoadedMetadataAtom = useSetAtom(
+		onLoadedMetadataReplayAtomFamily(replayId),
+	);
+
+	const setReplayStateAtom = useSetAtom(writeReplayStateAtomFamily(replayId));
+
+	const replayUrl = useAtomValue(readReplayPlayerURLAtomFamily(replayId));
+
+	const shouldPlayAtom = useAtomValue(shouldPlayReplayAtomFamily(replayId));
+
 	const videoRef = useRef<HTMLVideoElement>(null);
-	const { data: replays } = useReplays();
-
-	const replay = replays?.find((r) => r.id === replayId);
-
-	const isPlaying = useReplayStore((state) =>
-		state.playingReplays.includes(replayId),
-	);
-	const setPlayerState = useReplayStore(
-		useCallback((state) => state.setPlayerState, []),
-	);
-
-	// Sync store state with video element - store is the single source of truth
 	useEffect(() => {
-		if (!videoRef.current) return;
-
-		if (isPlaying && videoRef.current.paused) {
-			videoRef.current.play().catch(() => {
-				// Ignore play errors (e.g., when component unmounts)
-			});
-		} else if (!isPlaying && !videoRef.current.paused) {
+		if (videoRef.current && shouldPlayAtom) {
+			videoRef.current.play();
+		} else if (videoRef.current) {
 			videoRef.current.pause();
 		}
-	}, [isPlaying]);
+	}, [shouldPlayAtom]);
 
-	if (!replay) {
+	if (!replayUrl) {
 		return (
 			<div className="w-full">
 				<Skeleton
@@ -65,13 +58,15 @@ export const ReplayPlayerMini = ({
 				loop
 				ref={videoRef}
 				preload="metadata"
-				onPlay={() => setPlayerState(replayId, "playing")}
-				onPause={() => setPlayerState(replayId, "paused")}
-				onEnded={() => setPlayerState(replayId, "ended")}
-				onError={() => setPlayerState(replayId, "error")}
-				onLoadStart={() => setPlayerState(replayId, "loading")}
+				onPlay={() => onPlayAtom()}
+				onPause={() => onPauseAtom()}
+				onEnded={() => setReplayStateAtom("ended")}
+				onError={() => setReplayStateAtom("error")}
+				onLoadStart={() => setReplayStateAtom("loading")}
+				onCanPlay={() => setReplayStateAtom("paused")}
+				onLoadedMetadata={() => onLoadedMetadataAtom()}
 			>
-				<source src={`${replay.url}`} type="video/mp4" />
+				<source src={`${replayUrl}`} type="video/mp4" />
 			</MediaPlayerVideo>
 		</MediaPlayer>
 	);

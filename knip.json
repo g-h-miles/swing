@@ -1,6 +1,7 @@
 {
   "rules": {
-    "exports": "off",
+    "exports": "warn",
     "types": "off"
-  }
+  },
+  "ignore":["src/components/ui/**/*"]
 }

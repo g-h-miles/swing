@@ -1,5 +1,4 @@
 // hooks/use-replays.ts
-import { useQuery } from "@tanstack/react-query";
 
 export interface ReplayData {
 	id: string;
@@ -30,6 +29,6 @@ export const replayQueryOptions = {
 	queryFn: fetchDummyReplays,
 };
 
-export const useReplays = () => {
-	return useQuery(replayQueryOptions);
-};
+// export const useReplays = () => {
+// 	return useQuery(replayQueryOptions);
+// };

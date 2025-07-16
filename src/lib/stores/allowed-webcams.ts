@@ -1,4 +1,4 @@
-import { readRequestPermissionStatusAtom } from "@/lib/stores/webcam-atom";
+import { readRequestPermissionStatusAtom } from "@/lib/stores/permission-atom";
 import {
 	readCameraPermissionAtom,
 	readCameraPermissionErrorAtom,

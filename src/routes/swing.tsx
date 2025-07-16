@@ -1,6 +1,6 @@
 //swing.tsx route
 import { Header } from "@/components/header";
-import { ReplayScroll } from "@/components/replay-virtual_";
+import { ReplayScroll } from "@/components/replay-virtual";
 import { ResizableDemo } from "@/components/swing";
 import { useWebcamStore } from "@/lib/stores/webcam-store";
 import { getAvailableWebcams } from "@/lib/webcams";
@@ -18,14 +18,14 @@ export const Route = createFileRoute("/swing")({
 });
 
 function RouteComponent() {
-	const { availableWebcams } = Route.useLoaderData();
-	const initializeFromLoader = useWebcamStore(
-		(state) => state.initializeFromLoader,
-	);
+	// const { availableWebcams } = Route.useLoaderData();
+	// const initializeFromLoader = useWebcamStore(
+	// 	(state) => state.initializeFromLoader,
+	// );
 
-	useEffect(() => {
-		initializeFromLoader(availableWebcams);
-	}, [availableWebcams, initializeFromLoader]);
+	// useEffect(() => {
+	// 	initializeFromLoader(availableWebcams);
+	// }, [availableWebcams, initializeFromLoader]);
 
 	return (
 		<div className="flex w-full h-screen fancy-background">

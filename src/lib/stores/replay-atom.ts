@@ -21,7 +21,7 @@ export interface ReplayPlayerState {
 }
 
 // Query atom for all replays
-export const replaysQueryAtom = atomWithQuery(() => replayQueryOptions);
+const replaysQueryAtom = atomWithQuery(() => replayQueryOptions);
 
 export const replaysIdTitleAtom = atom((get) => {
 	const { data, isLoading, isSuccess, error } = get(replaysQueryAtom);
@@ -71,7 +71,7 @@ const replayStateBaseAtomFamily = atomFamily((replayId: string) =>
 );
 
 // Atom family for individual replay states
-export const replayStateAtomFamily = atomFamily((replayId: string) =>
+const replayStateAtomFamily = atomFamily((replayId: string) =>
 	atom(
 		(get) => {
 			const isPlaying = get(playingReplayIdsAtom).includes(replayId);
@@ -97,7 +97,7 @@ const replayDataAtomFamily = atomFamily((replayId: string) =>
 	}),
 );
 
-export const replayAtomFamily = atomFamily((replayId: string) =>
+const replayAtomFamily = atomFamily((replayId: string) =>
 	atom(
 		(get) => {
 			const state = get(replayStateAtomFamily(replayId));
@@ -117,6 +117,7 @@ export const replayAtomFamily = atomFamily((replayId: string) =>
 	),
 );
 
+/** @public */
 export const readReplayStateAtomFamily = atomFamily((replayId: string) =>
 	atom((get) => get(replayStateAtomFamily(replayId)).state),
 );

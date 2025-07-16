@@ -1,22 +1,60 @@
-import { cameraPermissionQueryOptions } from "@/lib/hooks/use-permission";
+import { readAvailableWebcamsAtom } from "@/lib/stores/available-webcams-atom";
 import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
-import { useQueryClient } from "@tanstack/react-query";
-import { atom, useAtomValue } from "jotai";
-import { atomWithQuery } from "jotai-tanstack-query";
+import { atom } from "jotai";
 import { atomFamily, atomWithStorage } from "jotai/utils";
-import { useEffect } from "react";
-import { atomWithListeners } from "./atom-helpers";
+import { atomStore } from "./atom-store";
+import { readCameraPermissionAtom } from "./permission-atom";
 
 type WebcamSimple = {
 	deviceId: string | null;
 	videoEnabled: boolean;
 };
 
-export const webcamAtomFamily = atomFamily((key: string) => {
+const webcamAtomFamily = atomFamily((key: string) => {
 	const webcamAtom = atomWithStorage<WebcamSimple>(`webcam-atom-${key}`, {
 		deviceId: null,
 		videoEnabled: false,
 	});
+	webcamAtom.onMount = (setAtom) => {
+		const unsubscribeFromPermissions = atomStore.sub(
+			readCameraPermissionAtom,
+			() => {
+				console.log("readCameraPermissionAtom changed", key);
+				const currentSelection = atomStore.get(webcamAtom);
+				const currentPermissions = atomStore.get(readCameraPermissionAtom);
+
+				if (
+					currentSelection.deviceId &&
+					(currentPermissions === "prompt" || currentPermissions === "denied")
+				) {
+					setAtom({ deviceId: null, videoEnabled: false });
+				}
+			},
+		);
+
+		const unsubscribeFromWebcams = atomStore.sub(
+			readAvailableWebcamsAtom,
+			() => {
+				const currentSelection = atomStore.get(webcamAtom);
+				const currentWebcams = atomStore.get(readAvailableWebcamsAtom);
+
+				if (
+					currentSelection.deviceId &&
+					(currentWebcams.length === 0 ||
+						!currentWebcams.find(
+							(webcam) => webcam.deviceId === currentSelection.deviceId,
+						))
+				) {
+					setAtom({ deviceId: null, videoEnabled: false });
+				}
+			},
+		);
+
+		return () => {
+			unsubscribeFromPermissions();
+			unsubscribeFromWebcams();
+		};
+	};
 
 	return webcamAtom;
 });
@@ -38,65 +76,4 @@ export const toggleVideoEnabledAtom = atomFamily((key: string) => {
 			videoEnabled: !prev.videoEnabled,
 		}));
 	});
-});
-
-const permissionsQueryAtom = atomWithQuery(() => cameraPermissionQueryOptions);
-
-export const useCameraPermissionValue = () => {
-	const {
-		data: permissionValue,
-		isLoading,
-		isError,
-		refetch,
-	} = useAtomValue(permissionsQueryAtom);
-
-	useEffect(() => {
-		if (!permissionValue) return;
-
-		const handlePermissionChange = async () => {
-			await refetch();
-		};
-
-		permissionValue.addEventListener("change", handlePermissionChange);
-		return () => {
-			permissionValue.removeEventListener("change", handlePermissionChange);
-		};
-	}, [permissionValue, refetch]);
-
-	return { permissionValue, isLoading, isError };
-};
-
-export const readPermissionValueAtom = atom(
-	(get) => get(permissionsQueryAtom).data,
-);
-export const readPermissionIsLoadingAtom = atom(
-	(get) => get(permissionsQueryAtom).isLoading,
-);
-export const readPermissionIsErrorAtom = atom(
-	(get) => get(permissionsQueryAtom).isError,
-);
-
-type RequestPermissionStatus = "idle" | "loading" | "error" | "success";
-const requestPermissionStatusAtom = atom<RequestPermissionStatus>("idle");
-
-export const readRequestPermissionStatusAtom = atom((get) =>
-	get(requestPermissionStatusAtom),
-);
-
-export const setRequestPermissionStatusAtom = atom(
-	null,
-	(_get, set, status: RequestPermissionStatus) => {
-		set(requestPermissionStatusAtom, status);
-	},
-);
-
-export const requestPermissionAtom = atom(null, async (_get, set) => {
-	set(setRequestPermissionStatusAtom, "loading");
-
-	try {
-		await requestCameraAndMicrophoneStream();
-		set(setRequestPermissionStatusAtom, "success");
-	} catch (error) {
-		set(setRequestPermissionStatusAtom, "error");
-	}
 });

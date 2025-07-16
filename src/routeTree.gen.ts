@@ -9,30 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TestRouteImport } from './routes/test'
 import { Route as SwingRouteImport } from './routes/swing'
-import { Route as PlayerRouteImport } from './routes/player'
-import { Route as JotaiRouteImport } from './routes/jotai'
 import { Route as IndexRouteImport } from './routes/index'
 
-const TestRoute = TestRouteImport.update({
-  id: '/test',
-  path: '/test',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SwingRoute = SwingRouteImport.update({
   id: '/swing',
   path: '/swing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlayerRoute = PlayerRouteImport.update({
-  id: '/player',
-  path: '/player',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const JotaiRoute = JotaiRouteImport.update({
-  id: '/jotai',
-  path: '/jotai',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -43,70 +25,37 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/jotai': typeof JotaiRoute
-  '/player': typeof PlayerRoute
   '/swing': typeof SwingRoute
-  '/test': typeof TestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/jotai': typeof JotaiRoute
-  '/player': typeof PlayerRoute
   '/swing': typeof SwingRoute
-  '/test': typeof TestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/jotai': typeof JotaiRoute
-  '/player': typeof PlayerRoute
   '/swing': typeof SwingRoute
-  '/test': typeof TestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/jotai' | '/player' | '/swing' | '/test'
+  fullPaths: '/' | '/swing'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/jotai' | '/player' | '/swing' | '/test'
-  id: '__root__' | '/' | '/jotai' | '/player' | '/swing' | '/test'
+  to: '/' | '/swing'
+  id: '__root__' | '/' | '/swing'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  JotaiRoute: typeof JotaiRoute
-  PlayerRoute: typeof PlayerRoute
   SwingRoute: typeof SwingRoute
-  TestRoute: typeof TestRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/test': {
-      id: '/test'
-      path: '/test'
-      fullPath: '/test'
-      preLoaderRoute: typeof TestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/swing': {
       id: '/swing'
       path: '/swing'
       fullPath: '/swing'
       preLoaderRoute: typeof SwingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/player': {
-      id: '/player'
-      path: '/player'
-      fullPath: '/player'
-      preLoaderRoute: typeof PlayerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/jotai': {
-      id: '/jotai'
-      path: '/jotai'
-      fullPath: '/jotai'
-      preLoaderRoute: typeof JotaiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -121,10 +70,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  JotaiRoute: JotaiRoute,
-  PlayerRoute: PlayerRoute,
   SwingRoute: SwingRoute,
-  TestRoute: TestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
