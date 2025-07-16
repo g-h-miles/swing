@@ -2,18 +2,9 @@
 import { Header } from "@/components/header";
 import { ReplayScroll } from "@/components/replay-virtual";
 import { ResizableDemo } from "@/components/swing";
-import { useWebcamStore } from "@/lib/stores/webcam-store";
-import { getAvailableWebcams } from "@/lib/webcams";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
 
 export const Route = createFileRoute("/swing")({
-	loader: async () => {
-		const availableWebcams = await getAvailableWebcams();
-		return {
-			availableWebcams,
-		};
-	},
 	component: RouteComponent,
 });
 

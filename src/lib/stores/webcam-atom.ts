@@ -1,5 +1,4 @@
 import { readAvailableWebcamsAtom } from "@/lib/stores/available-webcams-atom";
-import { requestCameraAndMicrophoneStream } from "@/lib/webcams";
 import { atom } from "jotai";
 import { atomFamily, atomWithStorage } from "jotai/utils";
 import { atomStore } from "./atom-store";

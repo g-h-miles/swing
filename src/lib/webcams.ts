@@ -1,3 +1,4 @@
+/** @public */
 export async function getAvailableWebcams(): Promise<MediaDeviceInfo[]> {
 	try {
 		const devices = await navigator.mediaDevices.enumerateDevices();
