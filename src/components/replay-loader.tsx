@@ -1,4 +1,4 @@
-import { glassStyles } from "@/glass";
+import { getBaseGlassStyles } from "@/glass";
 import { cn } from "@/lib/utils";
 import { Fragment } from "react/jsx-runtime";
 import { Separator } from "./ui/separator";
@@ -9,9 +9,8 @@ export const ReplayLoader = () => {
 		<div className="h-full w-full py-1">
 			<div
 				className={cn(
+					getBaseGlassStyles(),
 					"relative h-full rounded-sm border ",
-					glassStyles.shadow,
-					glassStyles.blur,
 				)}
 			>
 				{Array.from({ length: 12 }).map((_, index) => (

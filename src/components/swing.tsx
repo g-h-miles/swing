@@ -1,4 +1,3 @@
-//swing.tsx component
 import {
 	ResizableHandle,
 	ResizablePanel,
@@ -14,7 +13,7 @@ import { WebcamPanelContent } from "./webcam-panel";
 const LAYOUT_KEY = "cam-layout";
 const SUB_LAYOUT_KEY = "cam-layout-right";
 
-export function ResizableDemo({ className }: { className?: string }) {
+export function WebcamLayout({ className }: { className?: string }) {
 	const isSmallDevice = useMediaQuery("only screen and (max-width : 768px)");
 
 	const panelOne = useRef<ImperativePanelHandle | null>(null);

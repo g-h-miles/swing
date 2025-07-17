@@ -8,8 +8,6 @@ export interface PermissionState {
 	error: string | null;
 }
 
-// const INIT = Symbol("init");
-
 const initialPermissionState: PermissionState = {
 	state: "mounting",
 	isLoading: true,
@@ -17,7 +15,6 @@ const initialPermissionState: PermissionState = {
 };
 
 const permissionAtomFamily = atomFamily((name: PermissionName) => {
-	// let init: symbol | null = INIT;
 	const anAtom = atom<PermissionState>(initialPermissionState);
 
 	anAtom.onMount = (setAtom) => {
@@ -41,12 +38,6 @@ const permissionAtomFamily = atomFamily((name: PermissionName) => {
 					error: null,
 				});
 				permissionStatus.onchange = () => {
-					// console.log("first mount");
-
-					// if (init === INIT) {
-					// 	init = null;
-					// 	return;
-					// }
 					console.log("permissionStatus changed");
 					if (!permissionStatus) return;
 					setAtom({

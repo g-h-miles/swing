@@ -4,16 +4,19 @@ import { atomFamily, atomWithStorage } from "jotai/utils";
 import { atomStore } from "./atom-store";
 import { readCameraPermissionAtom } from "./permission-atom";
 
-type WebcamSimple = {
+type SelectedWebcamSimple = {
 	deviceId: string | null;
 	videoEnabled: boolean;
 };
 
-const webcamAtomFamily = atomFamily((key: string) => {
-	const webcamAtom = atomWithStorage<WebcamSimple>(`webcam-atom-${key}`, {
-		deviceId: null,
-		videoEnabled: false,
-	});
+const selectedWebcamAtomFamily = atomFamily((key: string) => {
+	const webcamAtom = atomWithStorage<SelectedWebcamSimple>(
+		`webcam-atom-${key}`,
+		{
+			deviceId: null,
+			videoEnabled: false,
+		},
+	);
 	webcamAtom.onMount = (setAtom) => {
 		const unsubscribeFromPermissions = atomStore.sub(
 			readCameraPermissionAtom,
@@ -58,19 +61,19 @@ const webcamAtomFamily = atomFamily((key: string) => {
 	return webcamAtom;
 });
 
-export const readWebcamAtom = atomFamily((key: string) => {
-	return atom((get) => get(webcamAtomFamily(key)));
+export const readSelectedWebcamAtom = atomFamily((key: string) => {
+	return atom((get) => get(selectedWebcamAtomFamily(key)));
 });
 
-export const setDeviceIdAtom = atomFamily((key: string) => {
+export const setSelectedDeviceIdAtom = atomFamily((key: string) => {
 	return atom(null, (_get, set, deviceId: string | null) => {
-		set(webcamAtomFamily(key), { videoEnabled: false, deviceId });
+		set(selectedWebcamAtomFamily(key), { videoEnabled: false, deviceId });
 	});
 });
 
-export const toggleVideoEnabledAtom = atomFamily((key: string) => {
+export const toggleSelectedVideoEnabledAtom = atomFamily((key: string) => {
 	return atom(null, (_get, set) => {
-		set(webcamAtomFamily(key), (prev) => ({
+		set(selectedWebcamAtomFamily(key), (prev) => ({
 			...prev,
 			videoEnabled: !prev.videoEnabled,
 		}));

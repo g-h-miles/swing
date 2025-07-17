@@ -1,4 +1,3 @@
-// components/replay-player-mini.tsx
 import { MediaPlayer, MediaPlayerVideo } from "@/components/ui/media-player";
 import {
 	onLoadedMetadataReplayAtomFamily,
@@ -33,10 +32,16 @@ export const ReplayPlayerMini = ({
 
 	const videoRef = useRef<HTMLVideoElement>(null);
 	useEffect(() => {
-		if (videoRef.current && shouldPlayAtom) {
-			videoRef.current.play();
-		} else if (videoRef.current) {
-			videoRef.current.pause();
+		if (!videoRef.current) return;
+		
+		const video = videoRef.current;
+		
+		if (shouldPlayAtom) {
+			video.play().catch(() => {
+				// Ignore play interruption errors
+			});
+		} else {
+			video.pause();
 		}
 	}, [shouldPlayAtom]);
 

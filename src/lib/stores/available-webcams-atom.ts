@@ -65,9 +65,8 @@ baseAvailableWebcamsAtom.onMount = (setAtom) => {
 	};
 };
 
-export const availableWebcamsAtom = atom((get) =>
-	get(baseAvailableWebcamsAtom),
-);
+const availableWebcamsAtom = atom((get) => get(baseAvailableWebcamsAtom));
+
 /** @public */
 export const readAvailableWebcamsAtom = atom(
 	(get) => get(availableWebcamsAtom).devices,

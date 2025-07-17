@@ -1,6 +1,5 @@
-//webcam-panel.tsx component
-import { glassStyles } from "@/glass";
-import { readWebcamAtom } from "@/lib/stores/webcam-atom";
+import { getBaseGlassStyles } from "@/glass";
+import { readSelectedWebcamAtom } from "@/lib/stores/webcam-atom";
 import { cn } from "@/lib/utils";
 import { useAtomValue } from "jotai";
 import { Webcam } from "./ui/webcam";
@@ -14,7 +13,7 @@ export const WebcamPanelContent = ({
 	panelId: string;
 	className?: string;
 }) => {
-	const selection = useAtomValue(readWebcamAtom(panelId));
+	const selection = useAtomValue(readSelectedWebcamAtom(panelId));
 
 	return (
 		<div className="p-1 size-full @container">
@@ -52,10 +51,9 @@ export const WebcamPanelContent = ({
 							}}
 							className={cn(
 								"w-full h-full object-cover",
+								getBaseGlassStyles(),
 								"bg-black",
-								glassStyles.blur,
 								"rounded-md",
-								glassStyles.shadow,
 							)}
 							style={{
 								maxWidth: "100%",

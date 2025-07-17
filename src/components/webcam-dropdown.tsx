@@ -1,5 +1,3 @@
-//webcam-dropdown.tsx component
-
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -10,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { glassStyles } from "@/glass";
 import {
-	availableWebcamsAtom,
+	readAvailableWebcamsAtom,
 	readAvailableWebcamsLengthAtom,
 } from "@/lib/stores/available-webcams-atom";
 
@@ -19,9 +17,9 @@ import type React from "react";
 import { requestPermissionAtom } from "@/lib/stores/permission-atom";
 
 import {
-	readWebcamAtom,
-	setDeviceIdAtom,
-	toggleVideoEnabledAtom,
+	readSelectedWebcamAtom,
+	setSelectedDeviceIdAtom,
+	toggleSelectedVideoEnabledAtom,
 } from "@/lib/stores/webcam-atom";
 import { useAtomValue, useSetAtom } from "jotai";
 
@@ -58,15 +56,11 @@ const MenuItem = ({
 	</DropdownMenuItem>
 );
 
-export function WebcamDropdown({
-	panelId,
-}: {
-	panelId: string;
-}) {
-	const selection = useAtomValue(readWebcamAtom(panelId));
-	const setDeviceId = useSetAtom(setDeviceIdAtom(panelId));
-	const toggleVideo = useSetAtom(toggleVideoEnabledAtom(panelId));
-	const { devices: availableWebcams_ } = useAtomValue(availableWebcamsAtom);
+export function WebcamDropdown({ panelId }: { panelId: string }) {
+	const selection = useAtomValue(readSelectedWebcamAtom(panelId));
+	const setDeviceId = useSetAtom(setSelectedDeviceIdAtom(panelId));
+	const toggleVideo = useSetAtom(toggleSelectedVideoEnabledAtom(panelId));
+	const availableWebcams_ = useAtomValue(readAvailableWebcamsAtom);
 	const availableWebcamsLength = useAtomValue(readAvailableWebcamsLengthAtom);
 	const allowedWebcamsState = useAtomValue(readAllowedWebcamsStateAtom);
 

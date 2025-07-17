@@ -1,4 +1,4 @@
-import { glassStyles } from "@/glass";
+import { getBaseGlassStyles } from "@/glass";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 
@@ -13,10 +13,9 @@ export function GlassBtnBg({ ...props }: ButtonProps) {
 			className={cn(
 				"z-10 h-10 w-10 transition-opacity duration-600 cursor-pointer",
 				"fancy-fill",
-				"bg-white/5",
+				getBaseGlassStyles(),
 				"bg-blend-overlay",
-				glassStyles.border,
-				glassStyles.buttonHover,
+
 				className,
 			)}
 			aria-label="Scroll to top"
