@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { GlassButton } from "@/components/glass-button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -99,13 +100,11 @@ export function WebcamDropdown({ panelId }: { panelId: string }) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button
-					variant="ghost"
-					className={`w-10 h-10 p-0 cursor-pointer ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
+				<GlassButton
 					title={"Select Camera"}
 				>
 					<VideoCameraIcon className="w-4 h-4" />
-				</Button>
+				</GlassButton>
 			</DropdownMenuTrigger>
 
 			<DropdownMenuContent
@@ -205,14 +204,12 @@ const PermissionButton = () => {
 	};
 
 	return (
-		<Button
-			variant="ghost"
-			className={`w-10 h-10 p-0 cursor-pointer ${glassStyles.background} ${glassStyles.blur} ${glassStyles.border} ${glassStyles.borderRadius} ${glassStyles.shadow} ${glassStyles.buttonHover} ${glassStyles.transition} ${glassStyles.primaryText}`}
+		<GlassButton
 			disabled={allowedWebcamsState === "loading"}
 			onClick={handleRequestPermission}
 			title={getStatusMessage()}
 		>
 			{getButtonIcon()}
-		</Button>
+		</GlassButton>
 	);
 };

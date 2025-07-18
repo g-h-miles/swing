@@ -2,6 +2,7 @@ import { getBaseGlassStyles } from "@/glass";
 import { readSelectedWebcamAtom } from "@/lib/stores/webcam-atom";
 import { cn } from "@/lib/utils";
 import { useAtomValue } from "jotai";
+import { RecordingControls } from "./recording-controls";
 import { Webcam } from "./ui/webcam";
 import { WebcamDropdown } from "./webcam-dropdown";
 import { WebcamStatusText } from "./webcam-status-description";
@@ -37,7 +38,8 @@ export const WebcamPanelContent = ({
 						/>
 					}
 				</div>
-				<div className="absolute top-2 right-2 z-10">
+				<div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+					<RecordingControls panelId={panelId} />
 					<WebcamDropdown panelId={panelId} />
 				</div>
 				{selection?.videoEnabled && selection?.deviceId && (

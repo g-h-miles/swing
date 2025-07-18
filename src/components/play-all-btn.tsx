@@ -4,19 +4,19 @@ import {
 } from "@/lib/stores/replay-atom";
 import { PlayIcon, StopIcon } from "@phosphor-icons/react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { GlassBtnBg } from "./glass-btn-bg";
+import { FrostedGlassButton } from "./frosted-glass-button";
 
 export const PlayAllBtn = () => {
 	const isPlayingAll = useAtomValue(isPlayingAllReplaysAtom);
 	const togglePlayAll = useSetAtom(togglePlayAllAtom);
 
 	return (
-		<GlassBtnBg onClick={togglePlayAll} className="scroll-anchor-target">
+		<FrostedGlassButton onClick={togglePlayAll} className="scroll-anchor-target">
 			{!isPlayingAll ? (
 				<PlayIcon className="size-4" />
 			) : (
 				<StopIcon className="size-4" />
 			)}
-		</GlassBtnBg>
+		</FrostedGlassButton>
 	);
 };

@@ -7,7 +7,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useAtomValue } from "jotai";
 import { useCallback, useMemo, useRef } from "react";
 import { Fragment } from "react/jsx-runtime";
-import { GlassBtnBg } from "./glass-btn-bg";
+import { FrostedGlassButton } from "./frosted-glass-button";
 import { PlayAllBtn } from "./play-all-btn";
 import { ReplayError } from "./replay-error";
 import { ReplayLoader } from "./replay-loader";
@@ -100,13 +100,13 @@ export function ReplayScroll({ className }: { className?: string }) {
         </div>
 
         {showScrollToTop && (
-          <GlassBtnBg
+          <FrostedGlassButton
             onClick={handleScrollToTop}
             aria-label="Scroll to top"
             className="absolute top-2 left-2"
           >
             <ArrowUpIcon className="h-4 w-4" />
-          </GlassBtnBg>
+          </FrostedGlassButton>
         )}
       </div>
     </div>
