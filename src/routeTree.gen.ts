@@ -10,11 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SwingRouteImport } from './routes/swing'
+import { Route as GetFilesRouteImport } from './routes/getFiles'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as IndexRouteImport } from './routes/index'
 
 const SwingRoute = SwingRouteImport.update({
   id: '/swing',
   path: '/swing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GetFilesRoute = GetFilesRouteImport.update({
+  id: '/getFiles',
+  path: '/getFiles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,27 +37,35 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/getFiles': typeof GetFilesRoute
   '/swing': typeof SwingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/getFiles': typeof GetFilesRoute
   '/swing': typeof SwingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/getFiles': typeof GetFilesRoute
   '/swing': typeof SwingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/swing'
+  fullPaths: '/' | '/forgot-password' | '/getFiles' | '/swing'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/swing'
-  id: '__root__' | '/' | '/swing'
+  to: '/' | '/forgot-password' | '/getFiles' | '/swing'
+  id: '__root__' | '/' | '/forgot-password' | '/getFiles' | '/swing'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  GetFilesRoute: typeof GetFilesRoute
   SwingRoute: typeof SwingRoute
 }
 
@@ -56,6 +76,20 @@ declare module '@tanstack/react-router' {
       path: '/swing'
       fullPath: '/swing'
       preLoaderRoute: typeof SwingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/getFiles': {
+      id: '/getFiles'
+      path: '/getFiles'
+      fullPath: '/getFiles'
+      preLoaderRoute: typeof GetFilesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,6 +104,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  GetFilesRoute: GetFilesRoute,
   SwingRoute: SwingRoute,
 }
 export const routeTree = rootRouteImport

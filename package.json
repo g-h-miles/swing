@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --port 3000",
+    "dev": "concurrently 'bun dev:frontend' 'bun dev:backend'",
+    "dev:frontend": "vite --port 3000",
+    "dev:backend": "convex dev --tail-logs",
     "start": "vite --port 3000",
     "build": "vite build && tsc",
     "serve": "vite preview",
@@ -16,6 +18,8 @@
     "knip:fix": "knip --fix-type dependencies --tags=-knipignore"
   },
   "dependencies": {
+    "@convex-dev/better-auth": "^0.7.9",
+    "@convex-dev/react-query": "^0.0.0-alpha.11",
     "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-collapsible": "^1.1.11",
     "@radix-ui/react-dropdown-menu": "^2.1.15",
@@ -30,8 +34,10 @@
     "@tanstack/react-router-devtools": "^1.121.34",
     "@tanstack/react-virtual": "^3.13.12",
     "@uidotdev/usehooks": "^2.4.1",
+    "better-auth": "1.2.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "convex": "^1.25.4",
     "jotai": "^2.12.5",
     "jotai-tanstack-query": "^0.9.1",
     "media-chrome": "^4.11.1",
@@ -39,6 +45,7 @@
     "react-dom": "^19.0.0",
     "react-resizable-panels": "^3.0.3",
     "react-scan": "^0.4.3",
+    "sonner": "^2.0.6",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
